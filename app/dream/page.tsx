@@ -104,7 +104,7 @@ export default function DreamPage() {
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
         <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5">
-          Generate your <span className="text-blue-600">dream</span> room
+          Crie o ambiente dos seus <span className="text-blue-600">sonhos</span>
         </h1>
         <ResizablePanel>
           <AnimatePresence mode="wait">
@@ -120,7 +120,7 @@ export default function DreamPage() {
                         alt="1 icon"
                       />
                       <p className="text-left font-medium">
-                        Choose your room theme.
+                        Escolha o estilo da redecoração.
                       </p>
                     </div>
                     <DropDown
@@ -140,7 +140,7 @@ export default function DreamPage() {
                         alt="1 icon"
                       />
                       <p className="text-left font-medium">
-                        Choose your room type.
+                        Escolha o ambiente.
                       </p>
                     </div>
                     <DropDown
@@ -158,7 +158,7 @@ export default function DreamPage() {
                         alt="1 icon"
                       />
                       <p className="text-left font-medium">
-                        Upload a picture of your room.
+                        Carregue uma foto do seu ambiente.
                       </p>
                     </div>
                   </div>
@@ -200,9 +200,9 @@ export default function DreamPage() {
               {restoredImage && originalPhoto && !sideBySide && (
                 <div className="flex sm:space-x-4 sm:flex-row flex-col">
                   <div>
-                    <h2 className="mb-1 font-medium text-lg">Original Room</h2>
+                    <h2 className="mb-1 font-medium text-lg">Foto Original</h2>
                     <Image
-                      alt="original photo"
+                      alt="original room"
                       src={originalPhoto}
                       className="rounded-2xl relative w-full h-96"
                       width={475}
@@ -210,7 +210,7 @@ export default function DreamPage() {
                     />
                   </div>
                   <div className="sm:mt-0 mt-8">
-                    <h2 className="mb-1 font-medium text-lg">Generated Room</h2>
+                    <h2 className="mb-1 font-medium text-lg">Foto Redecorada</h2>
                     <a href={restoredImage} target="_blank" rel="noreferrer">
                       <Image
                         alt="restored photo"
@@ -253,7 +253,7 @@ export default function DreamPage() {
                     }}
                     className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition"
                   >
-                    Generate New Room
+                    Criar novo ambiente
                   </button>
                 )}
                 {restoredLoaded && (
@@ -266,7 +266,7 @@ export default function DreamPage() {
                     }}
                     className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition"
                   >
-                    Download Generated Room
+                    Baixar foto redecorada
                   </button>
                 )}
               </div>
