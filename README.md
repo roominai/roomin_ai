@@ -8,7 +8,7 @@ This is the previous and open source version of RoomGPT.io (a paid SaaS product)
 
 ## How it works
 
-It uses an ML model called [ControlNet](https://github.com/lllyasviel/ControlNet) to generate variations of rooms. This application gives you the ability to upload a photo of any room, which will send it through this ML Model using a Next.js API route, and return your generated room. The ML Model is hosted on [Replicate](https://replicate.com) and [Bytescale](https://www.bytescale.com/) is used for image storage.
+It uses an ML model called [ControlNet](https://github.com/lllyasviel/ControlNet) to generate variations of rooms. This application gives you the ability to upload a photo of any room, which will send it through this ML Model using a Next.js API route, and return your generated room. The ML Model is hosted on [Replicate](https://replicate.com).
 
 ## Running Locally
 
@@ -18,11 +18,11 @@ It uses an ML model called [ControlNet](https://github.com/lllyasviel/ControlNet
 git clone https://github.com/Nutlope/roomGPT
 ```
 
-### Creating a account on Replicate to get an API key.
+### Replicate API key
 
-1. Go to [Replicate](https://replicate.com/) to make an account.
-2. Click on your profile picture in the top left corner, and click on "API Tokens".
-3. Here you can find your API token. Copy it.
+To use this project, you need to obtain an API key from Replicate. Once you have your key, add it to the `.env` file as shown in the `.example.env`.
+
+You'll need to add your Replicate API key in the `.env` file.
 
 ### Storing the API keys in .env
 
