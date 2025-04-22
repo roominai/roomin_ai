@@ -14,12 +14,11 @@ export default function HomePage() {
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 sm:mt-20 mt-20 background-gradient">
 
       <h1 className="mx-auto max-w-4xl font-display text-5xl font-bold tracking-normal text-gray-800 sm:text-7xl">
-          Criando o ambiente dos sonhos{" "}
+          Criando o seu ambiente dos sonhos{" "}
           <span className="relative whitespace-nowrap text-blue-600">
             <SquigglyLines />
             <span className="relative">usando IA</span>
           </span>{" "}
-          para todos.
           </h1>
         <h2 className="mx-auto mt-12 max-w-xl text-lg text-gray-600 leading-7">
         Tire uma foto de um ambiente e veja como ele fica em diferentes temas.
