@@ -166,8 +166,8 @@ export default function DreamPage() {
               )}
               {restoredImage && (
                 <div>
-                  Here's your remodeled <b>{room.toLowerCase()}</b> in the{" "}
-                  <b>{theme.toLowerCase()}</b> theme!{" "}
+                  Aqui está o seu <b>{room.toLowerCase()}</b> redecorado com o tema{" "}
+                  <b>{theme.toLowerCase()}</b> {" "}
                 </div>
               )}
               <div
