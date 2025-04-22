@@ -4,11 +4,11 @@ export default function Footer() {
   return (
     <footer className="text-center h-16 sm:h-20 w-full sm:pt-2 pt-4 border-t mt-5 flex sm:flex-row flex-col justify-between items-center px-3 space-y-3 sm:mb-0 mb-3 border-gray-200">
       <div className="text-gray-600">
-        © {new Date().getFullYear()} Roomin. Todos os direitos reservados.
+        © {new Date().getFullYear()}, Roomin. Todos os direitos reservados.
       </div>
       <div className="flex space-x-4 pb-4 sm:pb-0">
         <Link
-          href="https://www.instagram.com/"
+          href="https://www.instagram.com/roomin.ai/"
           className="group"
           aria-label="Roomin on Instagram"
         >
