@@ -36,76 +36,58 @@ export async function POST(request: Request) {
 
   const { imageUrl, theme, room } = await request.json();
 
-  // Usando a API Replicate para processamento de imagem
-  try {
-    // Verificar se a chave da API Replicate está configurada
-    if (!process.env.REPLICATE_API_KEY) {
-      return NextResponse.json(
-        { error: "Chave da API Replicate não configurada" },
-        { status: 500 }
-      );
-    }
+  // POST request to Replicate to start the image restoration generation process
+  let startResponse = await fetch("https://api.replicate.com/v1/predictions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Token " + process.env.REPLICATE_API_KEY,
+    },
+    body: JSON.stringify({
+      version:
+        "854e8727697a057c525cdb45ab037f64ecca770a1769cc52287c2e56472a247b",
+      input: {
+        image: imageUrl,
+        prompt:
+          room === "Gaming Room"
+            ? "a room for gaming with gaming computers, gaming consoles, and gaming chairs"
+            : `a ${theme.toLowerCase()} ${room.toLowerCase()}`,
+        a_prompt:
+          "best quality, extremely detailed, photo from Pinterest, interior, cinematic photo, ultra-detailed, ultra-realistic, award-winning",
+        n_prompt:
+          "longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality",
+      },
+    }),
+  });
 
-    // Preparar o prompt baseado no tipo de quarto e tema
-    const prompt = room === "Gaming Room"
-      ? "a room for gaming with gaming computers, gaming consoles, and gaming chairs"
-      : `a ${theme.toLowerCase()} ${room.toLowerCase()}`;
+  let jsonStartResponse = await startResponse.json();
 
-    // Parâmetros para o modelo ControlNet
-    const response = await fetch("https://api.replicate.com/v1/predictions", {
-      method: "POST",
+  let endpointUrl = jsonStartResponse.urls.get;
+
+  // GET request to get the status of the image restoration process & return the result when it's ready
+  let restoredImage: string | null = null;
+  while (!restoredImage) {
+    // Loop in 1s intervals until the alt text is ready
+    console.log("polling for result...");
+    let finalResponse = await fetch(endpointUrl, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Token ${process.env.REPLICATE_API_KEY}`,
+        Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
-      body: JSON.stringify({
-        version: "854e8727697a057c525cdb45ab037f64ecca770a1769cc52287c2e56472a247b",
-        input: {
-          image: imageUrl,
-          prompt: `${prompt}, best quality, extremely detailed, photo from Pinterest, interior, cinematic photo, ultra-detailed, ultra-realistic, award-winning`,
-          a_prompt: "best quality, extremely detailed, photo from Pinterest, interior, cinematic photo, ultra-detailed, ultra-realistic, award-winning",
-          n_prompt: "longbody, lowres, bad anatomy, bad hands, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality",
-        },
-      }),
     });
+    let jsonFinalResponse = await finalResponse.json();
 
-    let prediction = await response.json();
-    if (response.status !== 201) {
-      return NextResponse.json(
-        { error: prediction.detail },
-        { status: 500 }
-      );
-    }
-
-    // Aguardar a conclusão do processamento
-    while (
-      prediction.status !== "succeeded" &&
-      prediction.status !== "failed"
-    ) {
+    if (jsonFinalResponse.status === "succeeded") {
+      restoredImage = jsonFinalResponse.output;
+    } else if (jsonFinalResponse.status === "failed") {
+      break;
+    } else {
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      const response = await fetch(
-        "https://api.replicate.com/v1/predictions/" + prediction.id,
-        {
-          headers: {
-            Authorization: `Token ${process.env.REPLICATE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      prediction = await response.json();
-      if (response.status !== 200) {
-        return NextResponse.json(
-          { error: prediction.detail },
-          { status: 500 }
-        );
-      }
     }
-
-    // Retornar a URL da imagem processada
-    return NextResponse.json(["success", prediction.output[0]]);
-    
-  } catch (error) {
-    console.error("Erro ao processar imagem:", error);
-    return NextResponse.json({ error: "Falha ao processar a imagem" }, { status: 500 });
   }
+
+  return NextResponse.json(
+    restoredImage ? restoredImage : "Failed to restore image"
+  );
 }
