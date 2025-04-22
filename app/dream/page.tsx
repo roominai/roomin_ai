@@ -90,7 +90,7 @@ export default function DreamPage() {
 
     let newPhoto = await res.json();
     if (res.status !== 200) {
-      setError(newPhoto.error || "Erro ao processar a imagem");
+      setError(newPhoto);
     } else {
       setRestoredImage(newPhoto[1]);
     }
@@ -102,9 +102,9 @@ export default function DreamPage() {
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Header />
-      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-8 sm:mb-0 mb-8">
-        <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5">
-          Redecore seu <span className="text-blue-600">ambiente</span> agora
+      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
+        <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-slate-100 sm:text-6xl mb-5">
+          Generate your <span className="text-blue-600">dream</span> room
         </h1>
         <ResizablePanel>
           <AnimatePresence mode="wait">
@@ -113,9 +113,14 @@ export default function DreamPage() {
                 <>
                   <div className="space-y-4 w-full max-w-sm">
                     <div className="flex mt-3 items-center space-x-3">
-                      <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-medium">1</div>
-                      <p className="text-left font-medium text-gray-700">
-                        Escolha o tema do seu ambiente.
+                      <Image
+                        src="/number-1-white.svg"
+                        width={30}
+                        height={30}
+                        alt="1 icon"
+                      />
+                      <p className="text-left font-medium">
+                        Choose your room theme.
                       </p>
                     </div>
                     <DropDown
@@ -128,9 +133,14 @@ export default function DreamPage() {
                   </div>
                   <div className="space-y-4 w-full max-w-sm">
                     <div className="flex mt-10 items-center space-x-3">
-                      <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-medium">2</div>
-                      <p className="text-left font-medium text-gray-700">
-                        Escolha o tipo de ambiente.
+                      <Image
+                        src="/number-2-white.svg"
+                        width={30}
+                        height={30}
+                        alt="1 icon"
+                      />
+                      <p className="text-left font-medium">
+                        Choose your room type.
                       </p>
                     </div>
                     <DropDown
@@ -141,18 +151,23 @@ export default function DreamPage() {
                   </div>
                   <div className="mt-4 w-full max-w-sm">
                     <div className="flex mt-6 w-96 items-center space-x-3">
-                      <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-medium">3</div>
-                      <p className="text-left font-medium text-gray-700">
-                        Envie uma foto do seu ambiente.
+                      <Image
+                        src="/number-3-white.svg"
+                        width={30}
+                        height={30}
+                        alt="1 icon"
+                      />
+                      <p className="text-left font-medium">
+                        Upload a picture of your room.
                       </p>
                     </div>
                   </div>
                 </>
               )}
               {restoredImage && (
-                <div className="text-gray-700 text-lg mt-4 mb-2">
-                  Aqui está seu <b>{room.toLowerCase()}</b> remodelado no tema{" "}
-                  <b>{theme.toLowerCase()}</b>!{" "}
+                <div>
+                  Here's your remodeled <b>{room.toLowerCase()}</b> in the{" "}
+                  <b>{theme.toLowerCase()}</b> theme!{" "}
                 </div>
               )}
               <div
@@ -172,37 +187,35 @@ export default function DreamPage() {
                   restored={restoredImage!}
                 />
               )}
-              {!originalPhoto && <div className="mt-4 card p-4 border border-gray-200"><UploadDropZone /></div>}
+              {!originalPhoto && <UploadDropZone />}
               {originalPhoto && !restoredImage && (
-                <div className="mt-4 card p-2 border border-gray-200">
-                  <Image
-                    alt="original photo"
-                    src={originalPhoto}
-                    className="rounded-xl h-96"
-                    width={475}
-                    height={475}
-                  />
-                </div>
+                <Image
+                  alt="original photo"
+                  src={originalPhoto}
+                  className="rounded-2xl h-96"
+                  width={475}
+                  height={475}
+                />
               )}
               {restoredImage && originalPhoto && !sideBySide && (
-                <div className="flex sm:space-x-6 sm:flex-row flex-col mt-4">
-                  <div className="card p-3 border border-gray-200">
-                    <h2 className="mb-2 font-medium text-lg text-gray-800">Ambiente Original</h2>
+                <div className="flex sm:space-x-4 sm:flex-row flex-col">
+                  <div>
+                    <h2 className="mb-1 font-medium text-lg">Original Room</h2>
                     <Image
                       alt="original photo"
                       src={originalPhoto}
-                      className="rounded-xl relative w-full h-96"
+                      className="rounded-2xl relative w-full h-96"
                       width={475}
                       height={475}
                     />
                   </div>
-                  <div className="sm:mt-0 mt-8 card p-3 border border-gray-200">
-                    <h2 className="mb-2 font-medium text-lg text-gray-800">Ambiente Gerado</h2>
+                  <div className="sm:mt-0 mt-8">
+                    <h2 className="mb-1 font-medium text-lg">Generated Room</h2>
                     <a href={restoredImage} target="_blank" rel="noreferrer">
                       <Image
                         alt="restored photo"
                         src={restoredImage}
-                        className="rounded-xl relative sm:mt-0 mt-2 cursor-zoom-in w-full h-96"
+                        className="rounded-2xl relative sm:mt-0 mt-2 cursor-zoom-in w-full h-96"
                         width={475}
                         height={475}
                         onLoadingComplete={() => setRestoredLoaded(true)}
@@ -214,7 +227,7 @@ export default function DreamPage() {
               {loading && (
                 <button
                   disabled
-                  className="bg-blue-600 rounded-full text-white font-medium px-4 pt-2 pb-3 mt-8 w-40 shadow-md"
+                  className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 mt-8 w-40"
                 >
                   <span className="pt-4">
                     <LoadingDots color="white" style="large" />
@@ -238,9 +251,9 @@ export default function DreamPage() {
                       setRestoredLoaded(false);
                       setError(null);
                     }}
-                    className="bg-blue-600 rounded-full text-white font-medium px-5 py-2 mt-8 hover:bg-blue-500 transition shadow-md hover:shadow-lg"
+                    className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition"
                   >
-                    Gerar Novo Ambiente
+                    Generate New Room
                   </button>
                 )}
                 {restoredLoaded && (
@@ -251,9 +264,9 @@ export default function DreamPage() {
                         appendNewToName(photoName!)
                       );
                     }}
-                    className="bg-white rounded-full text-gray-800 border border-gray-300 font-medium px-5 py-2 mt-8 hover:bg-gray-50 transition shadow-sm hover:shadow-md"
+                    className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition"
                   >
-                    Baixar Ambiente Gerado
+                    Download Generated Room
                   </button>
                 )}
               </div>
