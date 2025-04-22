@@ -1,13 +1,27 @@
-@tailwind base;
+@import 'tailwindcss/base';
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --text-primary: #1f2937;
+  --text-secondary: #4b5563;
+  --background-light: #f9fafb;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
 
 @media (min-width: 400px) {
   .background-gradient::before {
     background: radial-gradient(
       20% 50% at 50% 50%,
-      rgba(71, 127, 247, 0.376) 0%,
-      rgba(37, 38, 44, 0) 100%
+      rgba(59, 130, 246, 0.15) 0%,
+      rgba(255, 255, 255, 0) 100%
     );
     z-index: -10;
     content: "";
@@ -16,4 +30,16 @@
     transform: scale(1);
     pointer-events: none;
   }
+}
+
+.card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
 }
