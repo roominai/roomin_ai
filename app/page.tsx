@@ -22,7 +22,7 @@ export default function HomePage() {
           para todos.
           </h1>
         <h2 className="mx-auto mt-12 max-w-xl text-lg text-gray-600 leading-7">
-        Tire uma foto de um cômodo e veja como ele fica em diferentes temas.
+        Tire uma foto de um ambiente e veja como ele fica em diferentes temas.
         </h2>
         <Link
           className="bg-blue-600 rounded-xl text-white font-medium px-6 py-3 sm:mt-10 mt-8 hover:bg-blue-500 transition shadow-md hover:shadow-lg"
