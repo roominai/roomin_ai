@@ -106,16 +106,20 @@ export default function DreamPage() {
         <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5">
           Redecore seu <span className="text-blue-600">ambiente</span> agora
         </h1>
-        <ResizablePanel>
           <AnimatePresence mode="wait">
             <motion.div className="flex justify-between items-center w-full flex-col mt-4">
               {!restoredImage && (
                 <>
                   <div className="space-y-4 w-full max-w-sm">
                     <div className="flex mt-3 items-center space-x-3">
-                      <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-medium">1</div>
-                      <p className="text-left font-medium text-gray-700">
-                        Escolha o tema do seu ambiente.
+                      <Image
+                        src="/number-1-white.svg"
+                        width={30}
+                        height={30}
+                        alt="1 icon"
+                      />
+                      <p className="text-left font-medium">
+                        Choose your room theme.
                       </p>
                     </div>
                     <DropDown
@@ -128,9 +132,14 @@ export default function DreamPage() {
                   </div>
                   <div className="space-y-4 w-full max-w-sm">
                     <div className="flex mt-10 items-center space-x-3">
-                      <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-medium">2</div>
-                      <p className="text-left font-medium text-gray-700">
-                        Escolha o tipo de ambiente.
+                      <Image
+                        src="/number-2-white.svg"
+                        width={30}
+                        height={30}
+                        alt="1 icon"
+                      />
+                      <p className="text-left font-medium">
+                        Choose your room type.
                       </p>
                     </div>
                     <DropDown
@@ -139,16 +148,6 @@ export default function DreamPage() {
                       themes={rooms}
                     />
                   </div>
-                  <div className="mt-4 w-full max-w-sm">
-                    <div className="flex mt-6 w-96 items-center space-x-3">
-                      <div className="bg-blue-600 rounded-full w-8 h-8 flex items-center justify-center text-white font-medium">3</div>
-                      <p className="text-left font-medium text-gray-700">
-                        Envie uma foto do seu ambiente.
-                      </p>
-                    </div>
-                  </div>
-                </>
-              )}
                   <div className="mt-4 w-full max-w-sm">
                     <div className="flex mt-6 w-96 items-center space-x-3">
                       <Image
