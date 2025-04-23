@@ -24,6 +24,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { session }, error } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      
+      // Se o usuário estiver autenticado, sincronizar dados com o Supabase
+      if (session?.user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .upsert({
+            id: session.user.id,
+            email: session.user.email,
+            avatar_url: session.user.user_metadata?.avatar_url,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'id' });
+          
+        if (error) {
+          console.error('Erro ao sincronizar perfil:', error);
+        }
+      }
+      
       setLoading(false);
     };
 
@@ -31,9 +48,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Configurar listener para mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Se o usuário estiver autenticado, sincronizar dados com o Supabase
+        if (session?.user) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .upsert({
+              id: session.user.id,
+              email: session.user.email,
+              avatar_url: session.user.user_metadata?.avatar_url,
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'id' });
+            
+          if (error) {
+            console.error('Erro ao sincronizar perfil:', error);
+          }
+        }
+        
         setLoading(false);
       }
     );
