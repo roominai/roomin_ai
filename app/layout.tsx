@@ -6,12 +6,12 @@ import { AuthProvider } from "../components/AuthProvider";
 let title = "Dream Room Generator";
 let description = "Generate your dream room in seconds.";
 let ogimage = "https://roomgpt-demo.vercel.app/og-image.png";
-let sitename = "roomGPT.io";
+let sitename = "roomin.netlify.app";
 
 export const metadata: Metadata = {
   title,
   description,
-  metadataBase: new URL("https://roomin-3hie8os8z-roominais-projects.vercel.app"),
+  metadataBase: new URL("https://roomin.netlify.app"),
   icons: {
     icon: "/favicon.ico",
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     images: [ogimage],
     title,
     description,
-    url: "https://roominaii.vercel.app",
+    url: "https://roomin.netlify.app",
     siteName: sitename,
     locale: "en_US",
     type: "website",
