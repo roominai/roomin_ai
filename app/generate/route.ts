@@ -97,39 +97,95 @@ export async function POST(request: Request) {
 
   let jsonStartResponse = await startResponse.json();
 
+  // Verificar se a resposta do Replicate contém os dados esperados
+  if (!jsonStartResponse || !jsonStartResponse.urls || !jsonStartResponse.urls.get) {
+    console.error("Erro na resposta da API Replicate:", jsonStartResponse);
+    
+    // Se houve erro na chamada da API, devolver os créditos ao usuário
+    if (userId) {
+      try {
+        // Usar a função do creditSystem para adicionar o crédito de volta
+        const { data, error } = await supabase
+          .from('profiles')
+          .update({ credits: userCredits })
+          .eq('id', userId);
+          
+        console.log(`Crédito devolvido para o usuário ${userId} devido a falha na API.`);
+      } catch (error) {
+        console.error("Erro ao devolver crédito:", error);
+      }
+    }
+    
+    return NextResponse.json({ error: "Erro ao processar a imagem. Por favor, tente novamente." }, { status: 500 });
+  }
+
   let endpointUrl = jsonStartResponse.urls.get;
 
   // GET request to get the status of the image restoration process & return the result when it's ready
   let restoredImage: string | null = null;
-  while (!restoredImage) {
-    // Loop in 1s intervals until the alt text is ready
-    console.log("polling for result...");
-    let finalResponse = await fetch(endpointUrl, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Token " + process.env.REPLICATE_API_KEY,
-      },
-    });
-    let jsonFinalResponse = await finalResponse.json();
-
-    if (jsonFinalResponse.status === "succeeded") {
-      restoredImage = jsonFinalResponse.output;
+  let maxRetries = 30; // Limitar o número de tentativas para evitar loops infinitos
+  let retryCount = 0;
+  
+  try {
+    while (!restoredImage && retryCount < maxRetries) {
+      // Loop in 1s intervals until the alt text is ready
+      console.log("polling for result...", retryCount + 1);
+      let finalResponse = await fetch(endpointUrl, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Token " + process.env.REPLICATE_API_KEY,
+        },
+      });
       
-      // Decrementar créditos do usuário após geração bem-sucedida
-      // Não precisamos debitar créditos novamente aqui, pois já foram debitados antes de iniciar a geração
-      // Apenas registramos o sucesso da operação
-      if (userId) {
-        console.log(`Imagem gerada com sucesso para o usuário ${userId}`);
+      if (!finalResponse.ok) {
+        throw new Error(`Erro na requisição: ${finalResponse.status}`);
       }
-    } else if (jsonFinalResponse.status === "failed") {
-      break;
-    } else {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-  }
+      
+      let jsonFinalResponse = await finalResponse.json();
 
-  return NextResponse.json(
-    restoredImage ? restoredImage : "Failed to restore image"
-  );
+      if (jsonFinalResponse.status === "succeeded") {
+        restoredImage = jsonFinalResponse.output;
+        
+        // Apenas registramos o sucesso da operação
+        if (userId) {
+          console.log(`Imagem gerada com sucesso para o usuário ${userId}`);
+        }
+      } else if (jsonFinalResponse.status === "failed") {
+        throw new Error("Falha na geração da imagem: " + (jsonFinalResponse.error || "Erro desconhecido"));
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        retryCount++;
+      }
+    }
+    
+    if (!restoredImage) {
+      throw new Error("Tempo limite excedido para geração da imagem");
+    }
+
+    return NextResponse.json(restoredImage);
+    
+  } catch (error) {
+    console.error("Erro durante a geração da imagem:", error);
+    
+    // Se houve erro durante o processamento, devolver os créditos ao usuário
+    if (userId) {
+      try {
+        // Restaurar o crédito original
+        const { data, error: updateError } = await supabase
+          .from('profiles')
+          .update({ credits: userCredits })
+          .eq('id', userId);
+          
+        console.log(`Crédito devolvido para o usuário ${userId} devido a falha na geração.`);
+      } catch (updateError) {
+        console.error("Erro ao devolver crédito:", updateError);
+      }
+    }
+    
+    return NextResponse.json(
+      { error: "Erro ao gerar a imagem. Por favor, tente novamente." }, 
+      { status: 500 }
+    );
+  }
 }
