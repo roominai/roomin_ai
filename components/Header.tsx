@@ -92,12 +92,6 @@ export default function Header() {
                 </svg>
                 <span className="text-sm font-medium text-blue-700">{credits}</span>
               </div>
-              
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="flex items-center justify-center space-x-2 rounded-full border border-gray-200 p-1 hover:border-gray-300 transition"
-                aria-expanded={isMenuOpen}
-                aria-haspopup="true"
               >
                 <Image 
                   src="/default-avatar.svg" 
@@ -106,7 +100,6 @@ export default function Header() {
                   height={36} 
                   className="rounded-full bg-white"
                 />
-            </button>
             </div>
             
             {isMenuOpen && (
