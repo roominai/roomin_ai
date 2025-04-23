@@ -92,13 +92,30 @@ export default function Header() {
                 </svg>
                 <span className="text-sm font-medium text-blue-700">{credits}</span>
               </div>
-              >
+              
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="flex items-center justify-center space-x-2 rounded-full border border-gray-200 p-1 hover:border-gray-300 transition"
                 aria-expanded={isMenuOpen}
                 aria-haspopup="true"
               >
+              {user?.user_metadata?.avatar_url ? (
+                <Image 
+                  src={user.user_metadata.avatar_url} 
+                  alt="Foto de perfil" 
+                  width={36} 
+                  height={36} 
+                  className="rounded-full"
+                />
+              ) : user?.user_metadata?.picture ? (
+                <Image 
+                  src={user.user_metadata.picture} 
+                  alt="Foto de perfil" 
+                  width={36} 
+                  height={36} 
+                  className="rounded-full"
+                />
+              ) : (
                 <Image 
                   src="/default-avatar.svg" 
                   alt="Foto de perfil" 
@@ -106,6 +123,7 @@ export default function Header() {
                   height={36} 
                   className="rounded-full bg-white"
                 />
+              )}
             </button>
             </div>
             
