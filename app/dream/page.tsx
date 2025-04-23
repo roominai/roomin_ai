@@ -153,12 +153,7 @@ export default function DreamPage() {
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
-        {authLoading ? (
-          <div className="flex flex-col justify-center items-center h-64">
-            <h2 className="text-2xl font-semibold mb-4 text-blue-600">Carregando Roomin.ai</h2>
-            <LoadingDots color="blue" />
-          </div>
-        ) : !user ? (
+        {!user && !authLoading ? (
           <div className="text-center p-8 border border-gray-200 rounded-xl shadow-md bg-white max-w-md">
             <h2 className="text-2xl font-semibold mb-4">Faça login para acessar esta página</h2>
             <p className="text-gray-600 mb-6">Você precisa estar logado para usar o recurso de redecoração de ambientes</p>
@@ -170,7 +165,7 @@ export default function DreamPage() {
             </Link>
           </div>
         ) : (
-        <>
+          <>
           <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5">
             Crie o ambiente dos seus <span className="text-blue-600">sonhos</span>
           </h1>
