@@ -2,11 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "./AuthProvider";
 import { useState, useRef, useEffect } from "react";
+import { supabase } from "../supabaseClient";
 
 export default function Header() {
   const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [credits, setCredits] = useState<number>(0);
 
   // Fechar o menu quando clicar fora dele
   useEffect(() => {
@@ -20,6 +22,27 @@ export default function Header() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Buscar créditos do usuário
+  useEffect(() => {
+    async function fetchUserCredits() {
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('credits')
+          .eq('id', user.id)
+          .single();
+        
+        if (data && !error) {
+          setCredits(data.credits || 0);
+        } else if (error) {
+          console.error('Erro ao buscar créditos:', error);
+        }
+      }
+    }
+    
+    fetchUserCredits();
+  }, [user]);
 
   return (
     <header className="flex flex-col xs:flex-row justify-between items-center w-full mt-6 border-b pb-7 sm:px-4 px-2 border-gray-200 gap-2">
@@ -37,12 +60,21 @@ export default function Header() {
       <div>
         {user ? (
           <div className="relative" ref={menuRef}>
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="flex items-center justify-center space-x-2 rounded-full border border-gray-200 p-1 hover:border-gray-300 transition"
-              aria-expanded={isMenuOpen}
-              aria-haspopup="true"
-            >
+            <div className="flex items-center">
+              {/* Exibição de créditos */}
+              <div className="flex items-center mr-3 bg-blue-50 px-3 py-1 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium text-blue-700">{credits}</span>
+              </div>
+              
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="flex items-center justify-center space-x-2 rounded-full border border-gray-200 p-1 hover:border-gray-300 transition"
+                aria-expanded={isMenuOpen}
+                aria-haspopup="true"
+              >
               {user?.user_metadata?.avatar_url ? (
                 <Image 
                   src={user?.user_metadata?.avatar_url} 
@@ -65,6 +97,7 @@ export default function Header() {
                 </div>
               )}
             </button>
+            </div>
             
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
