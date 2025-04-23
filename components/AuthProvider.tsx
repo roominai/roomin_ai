@@ -3,12 +3,14 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { Session, User } from '@supabase/supabase-js';
+import { useRealtimeProfile } from '../hooks/useRealtimeProfile';
 
 type AuthContextType = {
   user: User | null;
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  credits: number;
   signOut: () => Promise<void>;
 };
 
@@ -17,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   isAdmin: false,
+  credits: 0,
   signOut: async () => {},
 });
 
@@ -26,7 +29,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // Usar o hook de perfil em tempo real
+  const { profile, loading: profileLoading, isAdmin, credits } = useRealtimeProfile(user);
 
   useEffect(() => {
     // Verificar sessão atual
@@ -37,20 +42,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       setSession(session);
       setUser(session?.user ?? null);
-
-      // Verificar se o usuário é admin
-      if (session?.user) {
-        const { data, error: profileError } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .single();
-
-        if (data && !profileError) {
-          setIsAdmin(data.is_admin || false);
-        }
-      }
-
       setLoading(false);
     };
 
@@ -61,22 +52,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-
-        // Atualizar status de admin quando o estado de autenticação mudar
-        if (session?.user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', session.user.id)
-            .single();
-
-          if (data && !error) {
-            setIsAdmin(data.is_admin || false);
-          }
-        } else {
-          setIsAdmin(false);
-        }
-
         setLoading(false);
       }
     );
@@ -91,7 +66,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signOut }}>
+    <AuthContext.Provider 
+      value={{
+        user,
+        session,
+        loading: loading || profileLoading,
+        isAdmin: isAdmin,
+        credits: credits,
+        signOut
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
