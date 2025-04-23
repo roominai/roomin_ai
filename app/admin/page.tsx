@@ -1,406 +1,168 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
-import { useAuth } from "../../components/AuthProvider";
-import { supabase } from "../../supabaseClient";
-import Image from "next/image";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../../components/AuthProvider';
+import { supabase } from '../../supabaseClient';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
 
-// Verificar se a tabela admin_panel existe e criar um registro inicial se necessário
-async function ensureAdminPanelSetup(userId: string) {
-  try {
-    const { error } = await supabase
-      .from('admin_panel')
-      .upsert({
-        admin_id: userId,
-        last_update: new Date().toISOString()
-      }, { onConflict: 'admin_id' });
-      
-    if (error) {
-      console.error('Erro ao configurar painel admin:', error);
-    }
-  } catch (err) {
-    console.error('Erro ao verificar tabela admin_panel:', err);
-  }
-}
-
-type User = {
+type Profile = {
   id: string;
   email: string;
   credits: number;
-  avatar_url: string | null;
+  created_at: string;
 };
 
 export default function AdminPage() {
   const { user, isAdmin, loading } = useAuth();
   const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [creditsToAdd, setCreditsToAdd] = useState<Record<string, string>>({});
-  const [updating, setUpdating] = useState<string | null>(null); // Para indicar qual usuário está sendo atualizado
-  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [message, setMessage] = useState({ text: '', type: '' });
 
+  // Redirecionar se não for admin
   useEffect(() => {
-    // Redirecionar se não for admin ou não estiver logado
     if (!loading && (!user || !isAdmin)) {
-      router.push("/");
-    } else if (user && isAdmin) {
-      fetchUsers();
-      
-      // Configurar subscription para atualizações em tempo real usando a tabela admin_panel
-      const subscription = supabase
-        .channel('admin-panel-changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'admin_panel'
-        }, (payload) => {
-          console.log('Mudança detectada no painel admin:', payload);
-          // Forçar atualização imediata dos dados
-          fetchUsers(); // Atualizar a lista quando houver mudanças
-        })
-        .subscribe((status) => {
-          console.log('Status da subscription admin_panel:', status);
-        });
-
-      // Manter também a subscription na tabela profiles para garantir compatibilidade
-      const profilesSubscription = supabase
-        .channel('admin-profiles-changes')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'profiles'
-        }, (payload) => {
-          console.log('Mudança detectada em profiles:', payload);
-          fetchUsers();
-        })
-        .subscribe();
-        
-      return () => {
-        subscription.unsubscribe();
-        profilesSubscription.unsubscribe();
-      };
+      router.push('/');
     }
   }, [user, isAdmin, loading, router]);
 
+  // Buscar perfis de usuários
   useEffect(() => {
-    if (users.length > 0) {
-      const results = users.filter(user =>
-        user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredUsers(results);
-    }
-  }, [searchTerm, users]);
-
-  const fetchUsers = async () => {
-    setIsLoading(true);
-    try {
-      // Adicionar um parâmetro de cache-busting para forçar uma nova consulta
-      const timestamp = new Date().getTime();
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, email, credits, avatar_url')
-        .order('email')
-        .limit(100); // Limitar para melhorar o desempenho
-
+    const fetchProfiles = async () => {
+      if (!isAdmin) return;
+      
+      setIsLoading(true);
+      let query = supabase.from('profiles').select('*');
+      
+      if (searchTerm) {
+        query = query.ilike('email', `%${searchTerm}%`);
+      }
+      
+      const { data, error } = await query.order('created_at', { ascending: false });
+      
       if (error) {
-        console.error('Erro ao buscar usuários:', error);
-        return;
-      }
-
-      console.log(`Dados obtidos em ${timestamp}:`, data);
-      setUsers(data || []);
-      setFilteredUsers(data || []);
-      console.log('Dados atualizados com sucesso');
-      
-      // Mostrar notificação quando os dados forem atualizados via subscription
-      if (!isLoading) {
-        setNotification({message: 'Dados atualizados com sucesso!', type: 'success'});
-        // Limpar a notificação após 3 segundos
-        setTimeout(() => setNotification(null), 3000);
+        console.error('Erro ao buscar perfis:', error);
+        setMessage({ text: 'Erro ao carregar usuários', type: 'error' });
+      } else {
+        setProfiles(data || []);
       }
       
-      // Atualizar a tabela admin_panel para manter o registro de última atualização
-      if (user && isAdmin) {
-        await supabase
-          .from('admin_panel')
-          .upsert({
-            admin_id: user.id,
-            last_update: new Date().toISOString()
-          }, { onConflict: 'admin_id' });
-      }
-    } catch (error) {
-      console.error('Erro ao buscar usuários:', error);
-    } finally {
       setIsLoading(false);
-    }
-  };
+    };
 
-  const handleCreditChange = (userId: string, value: string) => {
-    setCreditsToAdd(prev => ({
-      ...prev,
-      [userId]: value
-    }));
-  };
+    fetchProfiles();
+  }, [isAdmin, searchTerm]);
 
-  const addCredits = async (userId: string) => {
-    const creditsValue = parseInt(creditsToAdd[userId] || "0");
-    if (isNaN(creditsValue)) return;
-
-    setUpdating(userId); // Indicar que este usuário está sendo atualizado
+  // Atualizar créditos de um usuário
+  const updateCredits = async (userId: string, newCredits: number) => {
     try {
-      // Primeiro, obter os créditos atuais do usuário
-      const { data: userData, error: fetchError } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', userId)
-        .single();
-
-      if (fetchError) {
-        console.error('Erro ao buscar créditos do usuário:', fetchError);
-        return;
-      }
-
-      const currentCredits = userData?.credits || 0;
-      const newCredits = currentCredits + creditsValue;
-
-      // Atualizar os créditos do usuário
       const { error } = await supabase
         .from('profiles')
         .update({ credits: newCredits })
         .eq('id', userId);
 
-      if (error) {
-        console.error('Erro ao atualizar créditos:', error);
-        return;
-      }
-
-      // Atualizar também a tabela admin_panel para disparar a subscription
-      if (user && isAdmin) {
-        const { error: adminError } = await supabase
-          .from('admin_panel')
-          .upsert({
-            admin_id: user.id,
-            last_update: new Date().toISOString()
-          }, { onConflict: 'admin_id' });
-
-        if (adminError) {
-          console.error('Erro ao atualizar painel admin:', adminError);
-        }
-      }
-
-      // Limpar o campo de entrada
-      setCreditsToAdd(prev => ({
-        ...prev,
-        [userId]: ""
-      }));
-
+      if (error) throw error;
+      
+      // Atualizar a lista local
+      setProfiles(profiles.map(profile => 
+        profile.id === userId ? { ...profile, credits: newCredits } : profile
+      ));
+      
+      setMessage({ text: 'Créditos atualizados com sucesso!', type: 'success' });
+      
+      // Limpar mensagem após 3 segundos
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error) {
-      console.error('Erro ao adicionar créditos:', error);
-    } finally {
-      setUpdating(null); // Remover indicador de atualização
+      console.error('Erro ao atualizar créditos:', error);
+      setMessage({ text: 'Erro ao atualizar créditos', type: 'error' });
     }
   };
 
-  const removeCredits = async (userId: string) => {
-    const creditsValue = parseInt(creditsToAdd[userId] || "0");
-    if (isNaN(creditsValue)) return;
-
-    setUpdating(userId); // Indicar que este usuário está sendo atualizado
-    try {
-      // Primeiro, obter os créditos atuais do usuário
-      const { data: userData, error: fetchError } = await supabase
-        .from('profiles')
-        .select('credits')
-        .eq('id', userId)
-        .single();
-
-      if (fetchError) {
-        console.error('Erro ao buscar créditos do usuário:', fetchError);
-        return;
-      }
-
-      const currentCredits = userData?.credits || 0;
-      const newCredits = Math.max(0, currentCredits - creditsValue); // Não permitir créditos negativos
-
-      // Atualizar os créditos do usuário
-      const { error } = await supabase
-        .from('profiles')
-        .update({ credits: newCredits })
-        .eq('id', userId);
-
-      if (error) {
-        console.error('Erro ao atualizar créditos:', error);
-        return;
-      }
-
-      // Atualizar também a tabela admin_panel para disparar a subscription
-      if (user && isAdmin) {
-        const { error: adminError } = await supabase
-          .from('admin_panel')
-          .upsert({
-            admin_id: user.id,
-            last_update: new Date().toISOString()
-          }, { onConflict: 'admin_id' });
-
-        if (adminError) {
-          console.error('Erro ao atualizar painel admin:', adminError);
-        }
-      }
-
-      // Limpar o campo de entrada
-      setCreditsToAdd(prev => ({
-        ...prev,
-        [userId]: ""
-      }));
-
-    } catch (error) {
-      console.error('Erro ao remover créditos:', error);
-    } finally {
-      setUpdating(null); // Remover indicador de atualização
-    }
-  };
-
-  if (loading) {
+  // Se estiver carregando ou não for admin, mostrar mensagem de carregamento
+  if (loading || !isAdmin) {
     return (
       <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
         <Header />
-        <main className="flex flex-1 w-full flex-col items-center justify-center px-4 mt-12 sm:mt-20">
-          <div className="text-center">Carregando...</div>
+        <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-12 sm:mt-20">
+          <p>Carregando...</p>
         </main>
         <Footer />
       </div>
     );
   }
 
-  if (!user || !isAdmin) {
-    return null; // Será redirecionado pelo useEffect
-  }
-
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center px-4 mt-12 sm:mt-20">
-        {notification && (
-          <div className={`w-full max-w-4xl mb-4 p-4 rounded-md ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {notification.message}
+        <h1 className="text-3xl font-bold mb-8">Painel Administrativo</h1>
+        
+        {/* Barra de pesquisa */}
+        <div className="w-full max-w-2xl mb-8">
+          <input
+            type="text"
+            placeholder="Pesquisar por email"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        
+        {/* Mensagem de feedback */}
+        {message.text && (
+          <div className={`w-full max-w-2xl mb-4 p-3 rounded-md ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {message.text}
           </div>
         )}
-        <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-          Painel de Administrador
-        </h1>
-
-        <div className="w-full max-w-4xl bg-white rounded-xl shadow-md p-6 mb-8">
-          <div className="mb-6">
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-              Buscar usuário por email
-            </label>
-            <input
-              type="text"
-              id="search"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Digite o email do usuário"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
+        
+        {/* Tabela de usuários */}
+        <div className="w-full max-w-4xl overflow-x-auto">
           {isLoading ? (
-            <div className="text-center py-4">Carregando usuários...</div>
+            <p className="text-center">Carregando usuários...</p>
+          ) : profiles.length === 0 ? (
+            <p className="text-center">Nenhum usuário encontrado</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Usuário
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Créditos
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Ações
-                    </th>
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="p-3 text-left border">Email</th>
+                  <th className="p-3 text-center border">Créditos</th>
+                  <th className="p-3 text-center border">Data de Criação</th>
+                  <th className="p-3 text-center border">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {profiles.map((profile) => (
+                  <tr key={profile.id} className="border hover:bg-gray-50">
+                    <td className="p-3 border">{profile.email}</td>
+                    <td className="p-3 text-center border">{profile.credits}</td>
+                    <td className="p-3 text-center border">
+                      {new Date(profile.created_at).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className="p-3 text-center border">
+                      <div className="flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => updateCredits(profile.id, profile.credits - 1)}
+                          disabled={profile.credits <= 0}
+                          className="px-2 py-1 bg-red-500 text-white rounded-md disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        >
+                          -
+                        </button>
+                        <button
+                          onClick={() => updateCredits(profile.id, profile.credits + 1)}
+                          className="px-2 py-1 bg-green-500 text-white rounded-md"
+                        >
+                          +
+                        </button>
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredUsers.length > 0 ? (
-                    filteredUsers.map((user) => (
-                      <tr key={user.id}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              {user.avatar_url ? (
-                                <Image
-                                  src={user.avatar_url}
-                                  alt="Avatar"
-                                  width={40}
-                                  height={40}
-                                  className="rounded-full"
-                                />
-                              ) : (
-                                <Image
-                                  src="/default-avatar.svg"
-                                  alt="Avatar"
-                                  width={40}
-                                  height={40}
-                                  className="rounded-full bg-white"
-                                />
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{user.email}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{user.credits}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="number"
-                              min="1"
-                              value={creditsToAdd[user.id] || ""}
-                              onChange={(e) => handleCreditChange(user.id, e.target.value)}
-                              placeholder="Qtd"
-                              className="w-20 px-2 py-1 border border-gray-300 rounded-md"
-                            />
-                            <button
-                              onClick={() => addCredits(user.id)}
-                              disabled={updating === user.id}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {updating === user.id ? '...' : '+'}
-                            </button>
-                            <button
-                              onClick={() => removeCredits(user.id)}
-                              disabled={updating === user.id}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {updating === user.id ? '...' : '-'}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
-                        {searchTerm ? "Nenhum usuário encontrado com esse email." : "Nenhum usuário cadastrado."}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
       </main>
