@@ -43,9 +43,9 @@ export default function Header() {
               aria-expanded={isMenuOpen}
               aria-haspopup="true"
             >
-              {user.user_metadata?.avatar_url ? (
+              {user?.user_metadata?.avatar_url ? (
                 <Image 
-                  src={user.user_metadata.avatar_url} 
+                  src={user?.user_metadata?.avatar_url} 
                   alt="Foto de perfil" 
                   width={36} 
                   height={36} 
