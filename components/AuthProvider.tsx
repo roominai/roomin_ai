@@ -31,8 +31,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Se o usuário estiver autenticado, sincronizar dados com o Supabase
       if (session?.user) {
-        // Verificar se o usuário é admin
-        const isAdminUser = session.user.email === 'contato.roomin.ai@gmail.com';
+        // Verificar se o usuário é admin usando a tabela profiles
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
+        
+        const isAdminUser = profileData?.is_admin || session.user.email === 'contato.roomin.ai@gmail.com';
         setIsAdmin(isAdminUser);
         
         const { data, error } = await supabase
@@ -45,6 +51,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             credits: 1, // Adicionar créditos iniciais para novos usuários
             is_admin: isAdminUser, // Definir flag de admin
           }, { onConflict: 'id' });
+          
+        // Se for admin, garantir que existe um registro na tabela admin_panel
+        if (isAdminUser) {
+          const { error: adminError } = await supabase
+            .from('admin_panel')
+            .upsert({
+              admin_id: session.user.id,
+              last_update: new Date().toISOString()
+            }, { onConflict: 'admin_id' });
+            
+          if (adminError) {
+            console.error('Erro ao configurar painel admin:', adminError);
+          }
+        }
           
         // Buscar os créditos atuais do usuário
         if (!error) {
