@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { supabase } from "../../supabaseClient";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 
@@ -11,27 +11,42 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGoogleLogin = async () => {
+  const router = useRouter();
+  const [redirectUrl, setRedirectUrl] = useState("");
+
+  useEffect(() => {
+    // Gerar URL de estado para segurança
+    const state = Math.random().toString(36).substring(2, 15);
+    localStorage.setItem('oauth_state', state);
+
+    // Construir URL de redirecionamento
+    const currentUrl = window.location.origin;
+    const googleRedirectUri = `${currentUrl}/auth/callback`;
+    
+    // Construir URL de autorização do Google
+    const googleAuthUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+    googleAuthUrl.searchParams.append('client_id', '406745229864-83461986tukmlnis28bl9j6fh5irjp6n.apps.googleusercontent.com');
+    googleAuthUrl.searchParams.append('redirect_uri', googleRedirectUri);
+    googleAuthUrl.searchParams.append('response_type', 'code');
+    googleAuthUrl.searchParams.append('scope', 'email profile');
+    googleAuthUrl.searchParams.append('state', state);
+    googleAuthUrl.searchParams.append('prompt', 'select_account');
+    
+    setRedirectUrl(googleAuthUrl.toString());
+  }, []);
+
+  const handleGoogleLogin = () => {
     try {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: 'https://jyxkboiztqnrtorwkowp.supabase.co/auth/v1/callback'
-        }
-      });
-
-      if (error) {
-        throw error;
+      // Redirecionar para a URL de autenticação do Google
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
       }
-      
-      // O redirecionamento será gerenciado pelo Supabase
     } catch (err: any) {
       setError(err.message || "Ocorreu um erro durante o login");
       console.error("Erro de login:", err);
-    } finally {
       setLoading(false);
     }
   };
