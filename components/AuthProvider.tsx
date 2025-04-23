@@ -34,6 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: session.user.email,
             avatar_url: session.user.user_metadata?.avatar_url,
             updated_at: new Date().toISOString(),
+            credits: 1, // Adicionar créditos iniciais para novos usuários
           }, { onConflict: 'id' });
           
         if (error) {
