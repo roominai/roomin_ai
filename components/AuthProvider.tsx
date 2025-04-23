@@ -1,89 +1,56 @@
-"use client";
+'use client';
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase } from "../supabaseClient";
-import { Session, User } from "@supabase/supabase-js";
+import { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '../supabaseClient';
+import { Session, User } from '@supabase/supabase-js';
 
 type AuthContextType = {
-  session: Session | null;
   user: User | null;
+  session: Session | null;
   loading: boolean;
-  signOut: () => Promise<void>;
-  credits: number;
   isAdmin: boolean;
+  signOut: () => Promise<void>;
 };
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  session: null,
+  loading: true,
+  isAdmin: false,
+  signOut: async () => {},
+});
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+export const useAuth = () => useContext(AuthContext);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [credits, setCredits] = useState<number>(0);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    // Obter sessão atual
+    // Verificar sessão atual
     const getSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Erro ao obter sessão:', error);
+      }
       setSession(session);
       setUser(session?.user ?? null);
-      
-      // Se o usuário estiver autenticado, sincronizar dados com o Supabase
+
+      // Verificar se o usuário é admin
       if (session?.user) {
-        // Verificar se o usuário é admin usando a tabela profiles
-        const { data: profileData, error: profileError } = await supabase
+        const { data, error: profileError } = await supabase
           .from('profiles')
           .select('is_admin')
           .eq('id', session.user.id)
           .single();
-        
-        const isAdminUser = profileData?.is_admin || session.user.email === 'contato.roomin.ai@gmail.com';
-        setIsAdmin(isAdminUser);
-        
-        const { data, error } = await supabase
-          .from('profiles')
-          .upsert({
-            id: session.user.id,
-            email: session.user.email,
-            avatar_url: session.user.user_metadata?.avatar_url,
-            updated_at: new Date().toISOString(),
-            credits: 1, // Adicionar créditos iniciais para novos usuários
-            is_admin: isAdminUser, // Definir flag de admin
-          }, { onConflict: 'id' });
-          
-        // Se for admin, garantir que existe um registro na tabela admin_panel
-        if (isAdminUser) {
-          const { error: adminError } = await supabase
-            .from('admin_panel')
-            .upsert({
-              admin_id: session.user.id,
-              last_update: new Date().toISOString()
-            }, { onConflict: 'admin_id' });
-            
-          if (adminError) {
-            console.error('Erro ao configurar painel admin:', adminError);
-          }
-        }
-          
-        // Buscar os créditos atuais do usuário
-        if (!error) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('credits')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (profileData && !profileError) {
-            setCredits(profileData.credits || 0);
-          }
-        }
-          
-        if (error) {
-          console.error('Erro ao sincronizar perfil:', error);
+
+        if (data && !profileError) {
+          setIsAdmin(data.is_admin || false);
         }
       }
-      
+
       setLoading(false);
     };
 
@@ -91,44 +58,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Configurar listener para mudanças de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        
-        // Se o usuário estiver autenticado, sincronizar dados com o Supabase
+
+        // Atualizar status de admin quando o estado de autenticação mudar
         if (session?.user) {
-          // Verificar se o usuário é admin
-          const isAdminUser = session.user.email === 'contato.roomin.ai@gmail.com';
-          setIsAdmin(isAdminUser);
-          
           const { data, error } = await supabase
             .from('profiles')
-            .upsert({
-              id: session.user.id,
-              email: session.user.email,
-              avatar_url: session.user.user_metadata?.avatar_url,
-              updated_at: new Date().toISOString(),
-              is_admin: isAdminUser, // Definir flag de admin
-            }, { onConflict: 'id' });
-            
-          // Buscar os créditos atuais do usuário
-          if (!error) {
-            const { data: profileData, error: profileError } = await supabase
-              .from('profiles')
-              .select('credits')
-              .eq('id', session.user.id)
-              .single();
-              
-            if (profileData && !profileError) {
-              setCredits(profileData.credits || 0);
-            }
+            .select('is_admin')
+            .eq('id', session.user.id)
+            .single();
+
+          if (data && !error) {
+            setIsAdmin(data.is_admin || false);
           }
-            
-          if (error) {
-            console.error('Erro ao sincronizar perfil:', error);
-          }
+        } else {
+          setIsAdmin(false);
         }
-        
+
         setLoading(false);
       }
     );
@@ -142,22 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   };
 
-  const value = {
-    session,
-    user,
-    loading,
-    signOut,
-    credits,
-    isAdmin,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth deve ser usado dentro de um AuthProvider");
-  }
-  return context;
-}
+  return (
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
