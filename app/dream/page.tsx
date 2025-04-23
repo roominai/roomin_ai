@@ -170,7 +170,8 @@ export default function DreamPage() {
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
         {authLoading ? (
-          <div className="flex justify-center items-center h-64">
+          <div className="flex flex-col justify-center items-center h-64">
+            <h2 className="text-2xl font-semibold mb-4 text-blue-600">Carregando Roomin.ai</h2>
             <LoadingDots color="blue" />
           </div>
         ) : !user ? (
@@ -209,7 +210,7 @@ export default function DreamPage() {
                   <div className="space-y-4 w-full max-w-sm">
                     <div className="flex mt-3 items-center space-x-3">
                       <Image
-                        src="/number-1-white.svg"
+                        src="/number-1-blue.svg"
                         width={30}
                         height={30}
                         alt="1 icon"
@@ -229,10 +230,10 @@ export default function DreamPage() {
                   <div className="space-y-4 w-full max-w-sm">
                     <div className="flex mt-10 items-center space-x-3">
                       <Image
-                        src="/number-2-white.svg"
+                        src="/number-2-blue.svg"
                         width={30}
                         height={30}
-                        alt="1 icon"
+                        alt="2 icon"
                       />
                       <p className="text-left font-medium">
                         Escolha o ambiente.
@@ -247,10 +248,10 @@ export default function DreamPage() {
                   <div className="mt-4 w-full max-w-sm">
                     <div className="flex mt-6 w-96 items-center space-x-3">
                       <Image
-                        src="/number-3-white.svg"
+                        src="/number-3-blue.svg"
                         width={30}
                         height={30}
-                        alt="1 icon"
+                        alt="3 icon"
                       />
                       <p className="text-left font-medium">
                         Carregue uma foto do seu ambiente.
