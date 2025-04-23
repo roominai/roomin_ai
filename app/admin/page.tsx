@@ -23,6 +23,8 @@ export default function AdminPage() {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [creditsToAdd, setCreditsToAdd] = useState<Record<string, string>>({});
+  const [updating, setUpdating] = useState<string | null>(null); // Para indicar qual usuário está sendo atualizado
+  const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
     // Redirecionar se não for admin ou não estiver logado
@@ -30,6 +32,23 @@ export default function AdminPage() {
       router.push("/");
     } else if (user && isAdmin) {
       fetchUsers();
+      
+      // Configurar subscription para atualizações em tempo real
+      const subscription = supabase
+        .channel('profiles-changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        }, (payload) => {
+          console.log('Mudança detectada:', payload);
+          fetchUsers(); // Atualizar a lista quando houver mudanças
+        })
+        .subscribe();
+        
+      return () => {
+        subscription.unsubscribe();
+      };
     }
   }, [user, isAdmin, loading, router]);
 
@@ -57,6 +76,14 @@ export default function AdminPage() {
 
       setUsers(data || []);
       setFilteredUsers(data || []);
+      console.log('Dados atualizados com sucesso');
+      
+      // Mostrar notificação quando os dados forem atualizados via subscription
+      if (!isLoading) {
+        setNotification({message: 'Dados atualizados com sucesso!', type: 'success'});
+        // Limpar a notificação após 3 segundos
+        setTimeout(() => setNotification(null), 3000);
+      }
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     } finally {
@@ -75,6 +102,7 @@ export default function AdminPage() {
     const creditsValue = parseInt(creditsToAdd[userId] || "0");
     if (isNaN(creditsValue)) return;
 
+    setUpdating(userId); // Indicar que este usuário está sendo atualizado
     try {
       // Primeiro, obter os créditos atuais do usuário
       const { data: userData, error: fetchError } = await supabase
@@ -102,14 +130,8 @@ export default function AdminPage() {
         return;
       }
 
-      // Atualizar a lista de usuários
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
-          u.id === userId ? { ...u, credits: newCredits } : u
-        )
-      );
-
-      // Limpar o campo de entrada
+      // Limpar o campo de entrada - não precisamos atualizar manualmente a lista
+      // pois a subscription do Supabase vai disparar a atualização
       setCreditsToAdd(prev => ({
         ...prev,
         [userId]: ""
@@ -117,6 +139,8 @@ export default function AdminPage() {
 
     } catch (error) {
       console.error('Erro ao adicionar créditos:', error);
+    } finally {
+      setUpdating(null); // Remover indicador de atualização
     }
   };
 
@@ -124,6 +148,7 @@ export default function AdminPage() {
     const creditsValue = parseInt(creditsToAdd[userId] || "0");
     if (isNaN(creditsValue)) return;
 
+    setUpdating(userId); // Indicar que este usuário está sendo atualizado
     try {
       // Primeiro, obter os créditos atuais do usuário
       const { data: userData, error: fetchError } = await supabase
@@ -151,14 +176,8 @@ export default function AdminPage() {
         return;
       }
 
-      // Atualizar a lista de usuários
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
-          u.id === userId ? { ...u, credits: newCredits } : u
-        )
-      );
-
-      // Limpar o campo de entrada
+      // Limpar o campo de entrada - não precisamos atualizar manualmente a lista
+      // pois a subscription do Supabase vai disparar a atualização
       setCreditsToAdd(prev => ({
         ...prev,
         [userId]: ""
@@ -166,6 +185,8 @@ export default function AdminPage() {
 
     } catch (error) {
       console.error('Erro ao remover créditos:', error);
+    } finally {
+      setUpdating(null); // Remover indicador de atualização
     }
   };
 
@@ -189,6 +210,11 @@ export default function AdminPage() {
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center px-4 mt-12 sm:mt-20">
+        {notification && (
+          <div className={`w-full max-w-4xl mb-4 p-4 rounded-md ${notification.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+            {notification.message}
+          </div>
+        )}
         <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
           Painel de Administrador
         </h1>
@@ -274,15 +300,17 @@ export default function AdminPage() {
                             />
                             <button
                               onClick={() => addCredits(user.id)}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+                              disabled={updating === user.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              +
+                              {updating === user.id ? '...' : '+'}
                             </button>
                             <button
                               onClick={() => removeCredits(user.id)}
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700"
+                              disabled={updating === user.id}
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              -
+                              {updating === user.id ? '...' : '-'}
                             </button>
                           </div>
                         </td>
