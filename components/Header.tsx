@@ -3,9 +3,11 @@ import Link from "next/link";
 import { useAuth } from "./AuthProvider";
 import { useState, useRef, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const { user, signOut, isAdmin } = useAuth();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [credits, setCredits] = useState<number>(0);
@@ -151,7 +153,11 @@ export default function Header() {
                   </Link>
                   <div className="border-t border-gray-100 my-1"></div>
                   <button
-                    onClick={() => signOut()}
+                    onClick={async () => {
+                      await signOut();
+                      router.push("/login");
+                      setIsMenuOpen(false);
+                    }}
                     className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     role="menuitem"
                   >
