@@ -11,6 +11,7 @@ let sitename = "roomGPT.io";
 export const metadata: Metadata = {
   title,
   description,
+  metadataBase: new URL("https://roomin-3hie8os8z-roominais-projects.vercel.app"),
   icons: {
     icon: "/favicon.ico",
   },
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     images: [ogimage],
     title,
     description,
-    url: "https://roomgpt-demo.vercel.app",
+    url: "https://roominaii.vercel.app",
     siteName: sitename,
     locale: "en_US",
     type: "website",
