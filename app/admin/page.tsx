@@ -29,7 +29,7 @@ export default function AdminPage() {
     }
   }, [user, isAdmin, loading, router]);
 
-  // Buscar perfis de usuários
+  // Buscar perfis de usuários e configurar subscription para atualizações em tempo real
   useEffect(() => {
     const fetchProfiles = async () => {
       if (!isAdmin) return;
@@ -54,6 +54,47 @@ export default function AdminPage() {
     };
 
     fetchProfiles();
+    
+    // Configurar subscription para atualizações em tempo real da tabela profiles
+    const subscription = supabase
+      .channel('admin-profiles-changes')
+      .on('postgres_changes', {
+        event: '*', // Escutar todos os eventos (INSERT, UPDATE, DELETE)
+        schema: 'public',
+        table: 'profiles'
+      }, (payload) => {
+        console.log('Mudança detectada na tabela profiles:', payload);
+        
+        // Atualizar a lista de perfis com base no tipo de evento
+        if (payload.eventType === 'INSERT') {
+          // Adicionar novo perfil à lista se corresponder ao termo de busca
+          const newProfile = payload.new as Profile;
+          if (!searchTerm || newProfile.email?.toLowerCase().includes(searchTerm.toLowerCase())) {
+            setProfiles(current => [newProfile, ...current]);
+          }
+        } 
+        else if (payload.eventType === 'UPDATE') {
+          // Atualizar perfil existente
+          setProfiles(current => 
+            current.map(profile => 
+              profile.id === payload.new.id ? { ...profile, ...payload.new } : profile
+            )
+          );
+        } 
+        else if (payload.eventType === 'DELETE') {
+          // Remover perfil excluído
+          setProfiles(current => 
+            current.filter(profile => profile.id !== payload.old.id)
+          );
+        }
+      })
+      .subscribe((status) => {
+        console.log('Status da subscription de perfis:', status);
+      });
+      
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [isAdmin, searchTerm]);
 
   // Atualizar créditos de um usuário
@@ -66,10 +107,8 @@ export default function AdminPage() {
 
       if (error) throw error;
       
-      // Atualizar a lista local
-      setProfiles(profiles.map(profile => 
-        profile.id === userId ? { ...profile, credits: newCredits } : profile
-      ));
+      // Não precisamos mais atualizar a lista local manualmente
+      // As atualizações serão recebidas automaticamente via subscription
       
       setMessage({ text: 'Créditos atualizados com sucesso!', type: 'success' });
       
