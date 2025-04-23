@@ -137,8 +137,8 @@ export default function DreamPage() {
     if (res.status !== 200) {
       setError(newPhoto);
     } else {
-      // Debitar um crédito após geração bem-sucedida
-      await debitCredit();
+      // A API já debita o crédito automaticamente, apenas atualizar a interface
+      fetchUserCredits(); // Atualizar os créditos após geração bem-sucedida
       // Corrigindo o acesso ao resultado da API
       setRestoredImage(Array.isArray(newPhoto) ? newPhoto[1] : newPhoto);
     }
@@ -147,23 +147,7 @@ export default function DreamPage() {
     }, 1300);
   }
   
-  // Função para debitar um crédito do usuário
-  async function debitCredit() {
-    try {
-      // Atualizar créditos no estado local
-      setCredits(prevCredits => prevCredits - 1);
-      
-      // Atualizar créditos no banco de dados
-      const { error } = await supabase
-        .from('profiles')
-        .update({ credits: credits - 1 })
-        .eq('id', user?.id);
-      
-      if (error) throw error;
-    } catch (error) {
-      console.error('Erro ao debitar crédito:', error);
-    }
-  }
+  // Não precisamos mais da função debitCredit pois a API já faz isso
 
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
