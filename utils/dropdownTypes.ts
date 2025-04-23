@@ -1,8 +1,8 @@
 export type themeType =
-  | "Modern"
+  | "Moderno"
   | "Vintage"
-  | "Minimalist"
-  | "Professional"
+  | "Minimalista"
+  | "Profissional"
   | "Tropical";
 
 export type roomType =
@@ -14,9 +14,9 @@ export type roomType =
   | "Gaming Room";
 
 export const themes: themeType[] = [
-  "Modern",
-  "Minimalist",
-  "Professional",
+  "Moderno",
+  "Minimalista",
+  "Profissional",
   "Tropical",
   "Vintage",
 ];
