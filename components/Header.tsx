@@ -51,6 +51,14 @@ export default function Header() {
                   height={36} 
                   className="rounded-full"
                 />
+              ) : user?.user_metadata?.picture ? (
+                <Image 
+                  src={user?.user_metadata?.picture} 
+                  alt="Foto de perfil" 
+                  width={36} 
+                  height={36} 
+                  className="rounded-full"
+                />
               ) : (
                 <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white">
                   {user.email?.charAt(0).toUpperCase() || 'U'}
