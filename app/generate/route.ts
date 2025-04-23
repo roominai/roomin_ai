@@ -59,9 +59,12 @@ export async function POST(request: Request) {
     userCredits = data.credits;
     
     // Debitar crédito antes de iniciar a geração da imagem
-    const success = await debitCredits(userId, 1);
-    if (!success) {
-      console.error("Erro ao debitar créditos do usuário");
+    // Usar RPC para garantir que a atualização dispare eventos em tempo real
+    const { data: updateData, error: updateError } = await supabase
+      .rpc('decrement_credits', { user_id: userId, amount: 1 });
+      
+    if (updateError || !updateData) {
+      console.error("Erro ao debitar créditos do usuário:", updateError);
       return new Response("Erro ao debitar créditos. Por favor, tente novamente.", { status: 500 });
     }
     
