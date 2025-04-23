@@ -50,7 +50,7 @@ export default function Header() {
       const subscription = supabase
         .channel('profile-credits-changes')
         .on('postgres_changes', {
-          event: '*',
+          event: 'UPDATE',
           schema: 'public',
           table: 'profiles',
           filter: `id=eq.${user.id}`
@@ -60,7 +60,9 @@ export default function Header() {
             setCredits(payload.new.credits);
           }
         })
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Status da subscription:', status);
+        });
         
       return () => {
         subscription.unsubscribe();
