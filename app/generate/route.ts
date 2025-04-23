@@ -38,6 +38,7 @@ export async function POST(request: Request) {
   const { imageUrl, theme, room, userId } = await request.json();
   
   // Verificar se o usuário tem créditos suficientes
+  let userCredits = 0;
   if (userId) {
     const { data, error } = await supabase
       .from('profiles')
@@ -52,6 +53,8 @@ export async function POST(request: Request) {
     if (!data || data.credits <= 0) {
       return new Response("Você não tem créditos suficientes para gerar uma imagem", { status: 402 });
     }
+    
+    userCredits = data.credits;
   }
 
   // POST request to Replicate to start the image restoration generation process
@@ -98,6 +101,18 @@ export async function POST(request: Request) {
 
     if (jsonFinalResponse.status === "succeeded") {
       restoredImage = jsonFinalResponse.output;
+      
+      // Decrementar créditos do usuário após geração bem-sucedida
+      if (userId && userCredits > 0) {
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ credits: userCredits - 1 })
+          .eq('id', userId);
+        
+        if (updateError) {
+          console.error("Erro ao atualizar créditos do usuário:", updateError);
+        }
+      }
     } else if (jsonFinalResponse.status === "failed") {
       break;
     } else {
