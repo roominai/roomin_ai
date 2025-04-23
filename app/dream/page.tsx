@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UrlBuilder } from "@bytescale/sdk";
 import { UploadWidgetConfig } from "@bytescale/upload-widget";
 import { UploadDropzone } from "@bytescale/upload-widget-react";
@@ -16,6 +16,10 @@ import appendNewToName from "../../utils/appendNewToName";
 import downloadPhoto from "../../utils/downloadPhoto";
 import DropDown from "../../components/DropDown";
 import { roomType, rooms, themeType, themes } from "../../utils/dropdownTypes";
+import { useAuth } from "../../components/AuthProvider";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { supabase } from "../../supabaseClient";
 
 const options: UploadWidgetConfig = {
   apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
@@ -42,6 +46,8 @@ const options: UploadWidgetConfig = {
 };
 
 export default function DreamPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [originalPhoto, setOriginalPhoto] = useState<string | null>(null);
   const [restoredImage, setRestoredImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -51,6 +57,33 @@ export default function DreamPage() {
   const [photoName, setPhotoName] = useState<string | null>(null);
   const [theme, setTheme] = useState<themeType>("Modern");
   const [room, setRoom] = useState<roomType>("Living Room");
+  const [credits, setCredits] = useState<number>(0);
+  
+  // Redirecionar para a página de login se o usuário não estiver autenticado
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/login');
+    } else if (user) {
+      // Buscar créditos do usuário
+      fetchUserCredits();
+    }
+  }, [user, authLoading, router]);
+  
+  // Função para buscar créditos do usuário
+  const fetchUserCredits = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('credits')
+        .eq('id', user?.id)
+        .single();
+      
+      if (error) throw error;
+      setCredits(data?.credits || 0);
+    } catch (error) {
+      console.error('Erro ao buscar créditos:', error);
+    }
+  };
 
   const UploadDropZone = () => (
     <UploadDropzone
@@ -78,6 +111,13 @@ export default function DreamPage() {
   );
 
   async function generatePhoto(fileUrl: string) {
+    // Verificar se o usuário tem créditos suficientes
+    if (credits <= 0) {
+      setError("Você não tem créditos suficientes para gerar uma imagem. Adquira créditos para continuar.");
+      setLoading(false);
+      return;
+    }
+    
     await new Promise((resolve) => setTimeout(resolve, 200));
     setLoading(true);
     const res = await fetch("/generate", {
@@ -85,27 +125,82 @@ export default function DreamPage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ imageUrl: fileUrl, theme, room }),
+      body: JSON.stringify({ 
+        imageUrl: fileUrl, 
+        theme, 
+        room,
+        userId: user?.id
+      }),
     });
 
     let newPhoto = await res.json();
     if (res.status !== 200) {
       setError(newPhoto);
     } else {
-      setRestoredImage(newPhoto[1]);
+      // Debitar um crédito após geração bem-sucedida
+      await debitCredit();
+      // Corrigindo o acesso ao resultado da API
+      setRestoredImage(Array.isArray(newPhoto) ? newPhoto[1] : newPhoto);
     }
     setTimeout(() => {
       setLoading(false);
     }, 1300);
+  }
+  
+  // Função para debitar um crédito do usuário
+  async function debitCredit() {
+    try {
+      // Atualizar créditos no estado local
+      setCredits(prevCredits => prevCredits - 1);
+      
+      // Atualizar créditos no banco de dados
+      const { error } = await supabase
+        .from('profiles')
+        .update({ credits: credits - 1 })
+        .eq('id', user?.id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erro ao debitar crédito:', error);
+    }
   }
 
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
-        <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5">
-          Crie o ambiente dos seus <span className="text-blue-600">sonhos</span>
-        </h1>
+        {authLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <LoadingDots color="blue" />
+          </div>
+        ) : !user ? (
+          <div className="text-center p-8 border border-gray-200 rounded-xl shadow-md bg-white max-w-md">
+            <h2 className="text-2xl font-semibold mb-4">Faça login para acessar esta página</h2>
+            <p className="text-gray-600 mb-6">Você precisa estar logado para usar o recurso de redecoração de ambientes</p>
+            <Link
+              href="/login"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors"
+            >
+              Fazer Login
+            </Link>
+          </div>
+        ) : (
+        <>
+          <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5">
+            Crie o ambiente dos seus <span className="text-blue-600">sonhos</span>
+          </h1>
+          <div className="mb-6 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+            <p className="text-blue-800">
+              Você tem <span className="font-bold">{credits}</span> crédito(s) disponível(is)
+              {credits <= 2 && (
+                <Link href="/creditos" className="ml-2 text-blue-600 underline">
+                  Comprar mais
+                </Link>
+              )}
+            </p>
+          </div>
+        </>
+        )}
         <ResizablePanel>
           <AnimatePresence mode="wait">
             <motion.div className="flex justify-between items-center w-full flex-col mt-4">
@@ -240,6 +335,16 @@ export default function DreamPage() {
                   role="alert"
                 >
                   <span className="block sm:inline">{error}</span>
+                  {error.includes("créditos") && (
+                    <div className="mt-3">
+                      <Link 
+                        href="/creditos"
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors inline-block"
+                      >
+                        Adquirir Créditos
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="flex space-x-2 justify-center">
