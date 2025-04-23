@@ -10,6 +10,7 @@ type AuthContextType = {
   loading: boolean;
   signOut: () => Promise<void>;
   credits: number;
+  isAdmin: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [credits, setCredits] = useState<number>(0);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     // Obter sessão atual
@@ -29,6 +31,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Se o usuário estiver autenticado, sincronizar dados com o Supabase
       if (session?.user) {
+        // Verificar se o usuário é admin
+        const isAdminUser = session.user.email === 'contato.roomin.ai@gmail.com';
+        setIsAdmin(isAdminUser);
+        
         const { data, error } = await supabase
           .from('profiles')
           .upsert({
@@ -37,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             avatar_url: session.user.user_metadata?.avatar_url,
             updated_at: new Date().toISOString(),
             credits: 1, // Adicionar créditos iniciais para novos usuários
+            is_admin: isAdminUser, // Definir flag de admin
           }, { onConflict: 'id' });
           
         // Buscar os créditos atuais do usuário
@@ -70,6 +77,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         // Se o usuário estiver autenticado, sincronizar dados com o Supabase
         if (session?.user) {
+          // Verificar se o usuário é admin
+          const isAdminUser = session.user.email === 'contato.roomin.ai@gmail.com';
+          setIsAdmin(isAdminUser);
+          
           const { data, error } = await supabase
             .from('profiles')
             .upsert({
@@ -77,6 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               email: session.user.email,
               avatar_url: session.user.user_metadata?.avatar_url,
               updated_at: new Date().toISOString(),
+              is_admin: isAdminUser, // Definir flag de admin
             }, { onConflict: 'id' });
             
           // Buscar os créditos atuais do usuário
@@ -116,6 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     credits,
+    isAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
