@@ -93,6 +93,12 @@ export default function Header() {
                 <span className="text-sm font-medium text-blue-700">{credits}</span>
               </div>
               >
+              <button
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="flex items-center justify-center space-x-2 rounded-full border border-gray-200 p-1 hover:border-gray-300 transition"
+                aria-expanded={isMenuOpen}
+                aria-haspopup="true"
+              >
                 <Image 
                   src="/default-avatar.svg" 
                   alt="Foto de perfil" 
@@ -100,6 +106,9 @@ export default function Header() {
                   height={36} 
                   className="rounded-full bg-white"
                 />
+            </button>
+            </div>
+            
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                 <div className="py-1" role="menu" aria-orientation="vertical">
