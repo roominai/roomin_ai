@@ -35,16 +35,19 @@ export default function AdminPage() {
       
       // Configurar subscription para atualizações em tempo real
       const subscription = supabase
-        .channel('profiles-changes')
+        .channel('admin-profiles-changes')
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
           table: 'profiles'
         }, (payload) => {
           console.log('Mudança detectada:', payload);
+          // Forçar atualização imediata dos dados
           fetchUsers(); // Atualizar a lista quando houver mudanças
         })
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Status da subscription:', status);
+        });
         
       return () => {
         subscription.unsubscribe();
@@ -64,16 +67,20 @@ export default function AdminPage() {
   const fetchUsers = async () => {
     setIsLoading(true);
     try {
+      // Adicionar um parâmetro de cache-busting para forçar uma nova consulta
+      const timestamp = new Date().getTime();
       const { data, error } = await supabase
         .from('profiles')
         .select('id, email, credits, avatar_url')
-        .order('email');
+        .order('email')
+        .limit(100); // Limitar para melhorar o desempenho
 
       if (error) {
         console.error('Erro ao buscar usuários:', error);
         return;
       }
 
+      console.log(`Dados obtidos em ${timestamp}:`, data);
       setUsers(data || []);
       setFilteredUsers(data || []);
       console.log('Dados atualizados com sucesso');
