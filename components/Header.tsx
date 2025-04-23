@@ -25,7 +25,7 @@ export default function Header() {
     };
   }, []);
 
-  // Buscar créditos do usuário
+  // Buscar créditos do usuário e configurar subscription para atualizações em tempo real
   useEffect(() => {
     async function fetchUserCredits() {
       if (user) {
@@ -44,6 +44,28 @@ export default function Header() {
     }
     
     fetchUserCredits();
+    
+    // Configurar subscription para atualizações em tempo real dos créditos
+    if (user) {
+      const subscription = supabase
+        .channel('profile-credits-changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        }, (payload) => {
+          console.log('Mudança detectada no perfil:', payload);
+          if (payload.new && 'credits' in payload.new && payload.new.credits !== undefined) {
+            setCredits(payload.new.credits);
+          }
+        })
+        .subscribe();
+        
+      return () => {
+        subscription.unsubscribe();
+      };
+    }
   }, [user]);
 
   return (
