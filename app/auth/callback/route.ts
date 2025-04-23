@@ -13,5 +13,5 @@ export async function GET(request: NextRequest) {
   }
 
   // URL para redirecionar após autenticação
-  return NextResponse.redirect(requestUrl.origin);
+  return NextResponse.redirect('https://roominai.vercel.app/');
 }
