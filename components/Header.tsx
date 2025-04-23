@@ -61,6 +61,16 @@ export default function Header() {
             {isMenuOpen && (
               <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-10">
                 <div className="py-1" role="menu" aria-orientation="vertical">
+                  {user && (
+                    <div className="px-4 py-3 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {user.user_metadata?.name || user.email?.split('@')[0]}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.email}
+                      </p>
+                    </div>
+                  )}
                   <Link 
                     href="/creditos" 
                     className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" 
