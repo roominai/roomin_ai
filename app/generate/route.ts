@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { supabase } from "../../supabaseClient";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 const ratelimit = redis
@@ -34,7 +35,24 @@ export async function POST(request: Request) {
     }
   }
 
-  const { imageUrl, theme, room } = await request.json();
+  const { imageUrl, theme, room, userId } = await request.json();
+  
+  // Verificar se o usuário tem créditos suficientes
+  if (userId) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', userId)
+      .single();
+    
+    if (error) {
+      return new Response("Erro ao verificar créditos do usuário", { status: 500 });
+    }
+    
+    if (!data || data.credits <= 0) {
+      return new Response("Você não tem créditos suficientes para gerar uma imagem", { status: 402 });
+    }
+  }
 
   // POST request to Replicate to start the image restoration generation process
   let startResponse = await fetch("https://api.replicate.com/v1/predictions", {
