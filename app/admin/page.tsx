@@ -8,6 +8,24 @@ import { useAuth } from "../../components/AuthProvider";
 import { supabase } from "../../supabaseClient";
 import Image from "next/image";
 
+// Verificar se a tabela admin_panel existe e criar um registro inicial se necessário
+async function ensureAdminPanelSetup(userId: string) {
+  try {
+    const { error } = await supabase
+      .from('admin_panel')
+      .upsert({
+        admin_id: userId,
+        last_update: new Date().toISOString()
+      }, { onConflict: 'admin_id' });
+      
+    if (error) {
+      console.error('Erro ao configurar painel admin:', error);
+    }
+  } catch (err) {
+    console.error('Erro ao verificar tabela admin_panel:', err);
+  }
+}
+
 type User = {
   id: string;
   email: string;
@@ -33,24 +51,38 @@ export default function AdminPage() {
     } else if (user && isAdmin) {
       fetchUsers();
       
-      // Configurar subscription para atualizações em tempo real
+      // Configurar subscription para atualizações em tempo real usando a tabela admin_panel
       const subscription = supabase
+        .channel('admin-panel-changes')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'admin_panel'
+        }, (payload) => {
+          console.log('Mudança detectada no painel admin:', payload);
+          // Forçar atualização imediata dos dados
+          fetchUsers(); // Atualizar a lista quando houver mudanças
+        })
+        .subscribe((status) => {
+          console.log('Status da subscription admin_panel:', status);
+        });
+
+      // Manter também a subscription na tabela profiles para garantir compatibilidade
+      const profilesSubscription = supabase
         .channel('admin-profiles-changes')
         .on('postgres_changes', {
           event: '*',
           schema: 'public',
           table: 'profiles'
         }, (payload) => {
-          console.log('Mudança detectada:', payload);
-          // Forçar atualização imediata dos dados
-          fetchUsers(); // Atualizar a lista quando houver mudanças
+          console.log('Mudança detectada em profiles:', payload);
+          fetchUsers();
         })
-        .subscribe((status) => {
-          console.log('Status da subscription:', status);
-        });
+        .subscribe();
         
       return () => {
         subscription.unsubscribe();
+        profilesSubscription.unsubscribe();
       };
     }
   }, [user, isAdmin, loading, router]);
@@ -90,6 +122,16 @@ export default function AdminPage() {
         setNotification({message: 'Dados atualizados com sucesso!', type: 'success'});
         // Limpar a notificação após 3 segundos
         setTimeout(() => setNotification(null), 3000);
+      }
+      
+      // Atualizar a tabela admin_panel para manter o registro de última atualização
+      if (user && isAdmin) {
+        await supabase
+          .from('admin_panel')
+          .upsert({
+            admin_id: user.id,
+            last_update: new Date().toISOString()
+          }, { onConflict: 'admin_id' });
       }
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
@@ -137,8 +179,21 @@ export default function AdminPage() {
         return;
       }
 
-      // Limpar o campo de entrada - não precisamos atualizar manualmente a lista
-      // pois a subscription do Supabase vai disparar a atualização
+      // Atualizar também a tabela admin_panel para disparar a subscription
+      if (user && isAdmin) {
+        const { error: adminError } = await supabase
+          .from('admin_panel')
+          .upsert({
+            admin_id: user.id,
+            last_update: new Date().toISOString()
+          }, { onConflict: 'admin_id' });
+
+        if (adminError) {
+          console.error('Erro ao atualizar painel admin:', adminError);
+        }
+      }
+
+      // Limpar o campo de entrada
       setCreditsToAdd(prev => ({
         ...prev,
         [userId]: ""
@@ -183,8 +238,21 @@ export default function AdminPage() {
         return;
       }
 
-      // Limpar o campo de entrada - não precisamos atualizar manualmente a lista
-      // pois a subscription do Supabase vai disparar a atualização
+      // Atualizar também a tabela admin_panel para disparar a subscription
+      if (user && isAdmin) {
+        const { error: adminError } = await supabase
+          .from('admin_panel')
+          .upsert({
+            admin_id: user.id,
+            last_update: new Date().toISOString()
+          }, { onConflict: 'admin_id' });
+
+        if (adminError) {
+          console.error('Erro ao atualizar painel admin:', adminError);
+        }
+      }
+
+      // Limpar o campo de entrada
       setCreditsToAdd(prev => ({
         ...prev,
         [userId]: ""
