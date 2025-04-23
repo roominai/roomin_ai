@@ -56,7 +56,7 @@ export default function DreamPage() {
   const [error, setError] = useState<string | null>(null);
   const [photoName, setPhotoName] = useState<string | null>(null);
   const [theme, setTheme] = useState<themeType>("Moderno");
-  const [room, setRoom] = useState<roomType>("Living Room");
+  const [room, setRoom] = useState<roomType>("Sala de estar");
   const [credits, setCredits] = useState<number>(0);
   
   // Redirecionar para a página de login se o usuário não estiver autenticado
