@@ -99,15 +99,6 @@ export default function Header() {
                 aria-expanded={isMenuOpen}
                 aria-haspopup="true"
               >
-
-: user?.user_metadata?.picture ? (
-                <Image 
-                  src={user?.user_metadata?.picture} 
-                  alt="Foto de perfil" 
-                  width={36} 
-                  height={36} 
-                  className="rounded-full"
-                />
                 <Image 
                   src="/default-avatar.svg" 
                   alt="Foto de perfil" 
