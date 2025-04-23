@@ -3,6 +3,7 @@ import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { supabase } from "../../supabaseClient";
+import { debitCredits } from "../../utils/creditSystem";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 const ratelimit = redis
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
       .single();
     
     if (error) {
+      console.error("Erro ao verificar créditos do usuário:", error);
       return new Response("Erro ao verificar créditos do usuário", { status: 500 });
     }
     
@@ -55,6 +57,15 @@ export async function POST(request: Request) {
     }
     
     userCredits = data.credits;
+    
+    // Debitar crédito antes de iniciar a geração da imagem
+    const success = await debitCredits(userId, 1);
+    if (!success) {
+      console.error("Erro ao debitar créditos do usuário");
+      return new Response("Erro ao debitar créditos. Por favor, tente novamente.", { status: 500 });
+    }
+    
+    console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
   }
 
   // POST request to Replicate to start the image restoration generation process
@@ -103,15 +114,10 @@ export async function POST(request: Request) {
       restoredImage = jsonFinalResponse.output;
       
       // Decrementar créditos do usuário após geração bem-sucedida
-      if (userId && userCredits > 0) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ credits: userCredits - 1 })
-          .eq('id', userId);
-        
-        if (updateError) {
-          console.error("Erro ao atualizar créditos do usuário:", updateError);
-        }
+      // Não precisamos debitar créditos novamente aqui, pois já foram debitados antes de iniciar a geração
+      // Apenas registramos o sucesso da operação
+      if (userId) {
+        console.log(`Imagem gerada com sucesso para o usuário ${userId}`);
       }
     } else if (jsonFinalResponse.status === "failed") {
       break;
