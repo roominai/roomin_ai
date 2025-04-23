@@ -6,11 +6,10 @@ import { supabase } from "../supabaseClient";
 import { useRouter } from "next/navigation";
 
 export default function Header() {
-  const { user, signOut, isAdmin } = useAuth();
+  const { user, signOut, isAdmin, credits } = useAuth();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [credits, setCredits] = useState<number>(0);
 
   // Fechar o menu quando clicar fora dele
   useEffect(() => {
@@ -25,50 +24,8 @@ export default function Header() {
     };
   }, []);
 
-  // Buscar créditos do usuário e configurar subscription para atualizações em tempo real
-  useEffect(() => {
-    async function fetchUserCredits() {
-      if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('credits')
-          .eq('id', user.id)
-          .single();
-        
-        if (data && !error) {
-          setCredits(data.credits || 0);
-        } else if (error) {
-          console.error('Erro ao buscar créditos:', error);
-        }
-      }
-    }
-    
-    fetchUserCredits();
-    
-    // Configurar subscription para atualizações em tempo real dos créditos
-    if (user) {
-      const subscription = supabase
-        .channel('profile-credits-changes')
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`
-        }, (payload) => {
-          console.log('Mudança detectada no perfil:', payload);
-          if (payload.new && 'credits' in payload.new && payload.new.credits !== undefined) {
-            setCredits(payload.new.credits);
-          }
-        })
-        .subscribe((status) => {
-          console.log('Status da subscription:', status);
-        });
-        
-      return () => {
-        subscription.unsubscribe();
-      };
-    }
-  }, [user]);
+  // Não precisamos mais buscar créditos ou configurar subscription aqui
+  // Isso agora é gerenciado pelo hook useRealtimeProfile no AuthProvider
 
   return (
     <header className="flex flex-col xs:flex-row justify-between items-center w-full mt-6 border-b pb-7 sm:px-4 px-2 border-gray-200 gap-2">
