@@ -133,14 +133,29 @@ export default function DreamPage() {
       }),
     });
 
-    let newPhoto = await res.json();
-    if (res.status !== 200) {
-      setError(newPhoto);
-    } else {
-      // A API já debita o crédito automaticamente, apenas atualizar a interface
-      fetchUserCredits(); // Atualizar os créditos após geração bem-sucedida
-      // Corrigindo o acesso ao resultado da API
-      setRestoredImage(Array.isArray(newPhoto) ? newPhoto[1] : newPhoto);
+    try {
+      let newPhoto = await res.json();
+      
+      if (res.status !== 200) {
+        // Verificar se a resposta contém uma mensagem de erro estruturada
+        if (newPhoto && newPhoto.error) {
+          setError(newPhoto.error);
+        } else {
+          setError(typeof newPhoto === 'string' ? newPhoto : 'Erro ao gerar a imagem. Por favor, tente novamente.');
+        }
+        // Atualizar os créditos, pois podem ter sido devolvidos em caso de erro
+        fetchUserCredits();
+      } else {
+        // A API já debita o crédito automaticamente, apenas atualizar a interface
+        fetchUserCredits(); // Atualizar os créditos após geração bem-sucedida
+        // Corrigindo o acesso ao resultado da API
+        setRestoredImage(Array.isArray(newPhoto) ? newPhoto[1] : newPhoto);
+      }
+    } catch (error) {
+      console.error('Erro ao processar resposta da API:', error);
+      setError('Erro ao processar a resposta do servidor. Por favor, tente novamente.');
+      // Atualizar os créditos, pois podem ter sido devolvidos em caso de erro
+      fetchUserCredits();
     }
     setTimeout(() => {
       setLoading(false);
