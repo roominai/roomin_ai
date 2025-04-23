@@ -9,6 +9,7 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  credits: number;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -17,6 +18,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [credits, setCredits] = useState<number>(0);
 
   useEffect(() => {
     // Obter sessão atual
@@ -36,6 +38,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             updated_at: new Date().toISOString(),
             credits: 1, // Adicionar créditos iniciais para novos usuários
           }, { onConflict: 'id' });
+          
+        // Buscar os créditos atuais do usuário
+        if (!error) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('credits')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (profileData && !profileError) {
+            setCredits(profileData.credits || 0);
+          }
+        }
           
         if (error) {
           console.error('Erro ao sincronizar perfil:', error);
@@ -64,6 +79,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               updated_at: new Date().toISOString(),
             }, { onConflict: 'id' });
             
+          // Buscar os créditos atuais do usuário
+          if (!error) {
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('credits')
+              .eq('id', session.user.id)
+              .single();
+              
+            if (profileData && !profileError) {
+              setCredits(profileData.credits || 0);
+            }
+          }
+            
           if (error) {
             console.error('Erro ao sincronizar perfil:', error);
           }
@@ -87,6 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     signOut,
+    credits,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
