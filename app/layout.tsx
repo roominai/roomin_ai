@@ -3,15 +3,15 @@ import { Metadata } from "next";
 import "../styles/globals.css";
 import { AuthProvider } from "../components/AuthProvider";
 
-let title = "Dream Room Generator";
-let description = "Generate your dream room in seconds.";
+let title = "Roomin AI";
+let description = "Redecore seu ambiente em segundos";
 let ogimage = "https://roomgpt-demo.vercel.app/og-image.png";
-let sitename = "roomin.netlify.app";
+let sitename = "roominai-six.vercel.app";
 
 export const metadata: Metadata = {
   title,
   description,
-  metadataBase: new URL("https://roomin.netlify.app"),
+  metadataBase: new URL("https://roominai-six.vercel.app"),
   icons: {
     icon: "/favicon.ico",
   },
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     images: [ogimage],
     title,
     description,
-    url: "https://roomin.netlify.app",
+    url: "https://roominai-six.vercel.app",
     siteName: sitename,
     locale: "en_US",
     type: "website",
