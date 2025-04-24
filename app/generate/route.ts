@@ -157,15 +157,20 @@ export async function POST(request: Request) {
 
     // Debitar crédito apenas após a geração bem-sucedida da imagem
     if (userId) {
-      const { data: updateData, error: updateError } = await supabase
-        .rpc('decrement_credits', { user_id: userId, amount: 1 });
+      try {
+        // Usar a função importada debitCredits do creditSystem
+        const success = await debitCredits(userId, 1);
         
-      if (updateError || !updateData) {
-        console.error("Erro ao debitar créditos do usuário:", updateError);
-        // Mesmo com erro no débito, retornamos a imagem gerada com sucesso
+        if (!success) {
+          console.error("Falha ao debitar créditos do usuário");
+          // Mesmo com erro no débito, retornamos a imagem gerada com sucesso
+          console.log("Imagem gerada com sucesso, mas houve erro ao debitar crédito");
+        } else {
+          console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
+        }
+      } catch (debitError) {
+        console.error("Erro ao debitar créditos do usuário:", debitError);
         console.log("Imagem gerada com sucesso, mas houve erro ao debitar crédito");
-      } else {
-        console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
       }
     }
 
