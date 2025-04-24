@@ -32,6 +32,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   
   // Usar o hook de perfil em tempo real
   const { profile, loading: profileLoading, isAdmin, credits } = useRealtimeProfile(user);
+  
+  // Log para depuração
+  useEffect(() => {
+    if (profile) {
+      console.log('Perfil carregado:', profile);
+      console.log('Status de admin:', isAdmin);
+    }
+  }, [profile, isAdmin]);
 
   useEffect(() => {
     // Verificar sessão atual
