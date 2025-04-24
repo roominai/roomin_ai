@@ -181,18 +181,23 @@ export default function DreamPage() {
           </div>
         ) : (
           <>
-          <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5">
-            Crie o ambiente dos seus <span className="text-blue-600">sonhos</span>
+          <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-gray-800 sm:text-6xl mb-5 font-poppins">
+            Crie o ambiente dos seus <span className="text-blue-600 bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">sonhos</span>
           </h1>
-          <div className="mb-6 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
-            <p className="text-blue-800">
-              Você tem <span className="font-bold">{credits}</span> crédito(s) disponível(is)
-              {credits <= 2 && (
-                <Link href="/creditos" className="ml-2 text-blue-600 underline">
-                  Comprar mais
-                </Link>
-              )}
-            </p>
+          <div className="mb-6">
+            <div className="credits-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                Você tem <span className="font-bold">{credits}</span> crédito(s) disponível(is)
+                {credits <= 2 && (
+                  <Link href="/creditos" className="ml-2 text-white underline hover:text-blue-100 transition-colors">
+                    Comprar mais
+                  </Link>
+                )}
+              </span>
+            </div>
           </div>
         </>
         )}
@@ -209,7 +214,7 @@ export default function DreamPage() {
                         height={30}
                         alt="1 icon"
                       />
-                      <p className="text-left font-medium">
+                      <p className="text-left font-medium text-gray-700 font-poppins">
                         Escolha o estilo da redecoração.
                       </p>
                     </div>
@@ -229,7 +234,7 @@ export default function DreamPage() {
                         height={30}
                         alt="2 icon"
                       />
-                      <p className="text-left font-medium">
+                      <p className="text-left font-medium text-gray-700 font-poppins">
                         Escolha o ambiente.
                       </p>
                     </div>
@@ -247,7 +252,7 @@ export default function DreamPage() {
                         height={30}
                         alt="3 icon"
                       />
-                      <p className="text-left font-medium">
+                      <p className="text-left font-medium text-gray-700 font-poppins">
                         Carregue uma foto do seu ambiente.
                       </p>
                     </div>
@@ -255,9 +260,9 @@ export default function DreamPage() {
                 </>
               )}
               {restoredImage && (
-                <div>
-                  Aqui está o seu <b>{room.toLowerCase()}</b> redecorado com o tema{" "}
-                  <b>{theme.toLowerCase()}</b> {" "}
+                <div className="font-poppins text-lg text-gray-700 mb-4 bg-blue-50 px-5 py-3 rounded-lg shadow-sm">
+                  Aqui está o seu <b className="text-blue-600">{room.toLowerCase()}</b> redecorado com o tema{" "}
+                  <b className="text-blue-600">{theme.toLowerCase()}</b> {" "}
                 </div>
               )}
               <div
@@ -290,7 +295,7 @@ export default function DreamPage() {
               {restoredImage && originalPhoto && !sideBySide && (
                 <div className="flex sm:space-x-4 sm:flex-row flex-col">
                   <div>
-                    <h2 className="mb-1 font-medium text-lg">Foto Original</h2>
+                    <h2 className="mb-1 font-medium text-lg font-poppins text-gray-700">Foto Original</h2>
                     <Image
                       alt="original room"
                       src={originalPhoto}
@@ -300,7 +305,7 @@ export default function DreamPage() {
                     />
                   </div>
                   <div className="sm:mt-0 mt-8">
-                    <h2 className="mb-1 font-medium text-lg">Foto Redecorada</h2>
+                    <h2 className="mb-1 font-medium text-lg font-poppins text-gray-700">Foto Redecorada</h2>
                     <a href={restoredImage} target="_blank" rel="noreferrer">
                       <Image
                         alt="restored photo"
@@ -326,7 +331,7 @@ export default function DreamPage() {
               )}
               {error && (
                 <div
-                  className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mt-8"
+                  className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mt-8 shadow-sm font-poppins"
                   role="alert"
                 >
                   <span className="block sm:inline">{error}</span>
@@ -334,7 +339,7 @@ export default function DreamPage() {
                     <div className="mt-3">
                       <Link 
                         href="/creditos"
-                        className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors inline-block"
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors inline-block shadow-md hover:shadow-lg"
                       >
                         Adquirir Créditos
                       </Link>
@@ -351,7 +356,7 @@ export default function DreamPage() {
                       setRestoredLoaded(false);
                       setError(null);
                     }}
-                    className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition"
+                    className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition shadow-md hover:shadow-lg font-poppins"
                   >
                     Criar novo ambiente
                   </button>
@@ -364,7 +369,7 @@ export default function DreamPage() {
                         appendNewToName(photoName!)
                       );
                     }}
-                    className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition"
+                    className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition shadow-sm hover:shadow-md font-poppins"
                   >
                     Baixar foto redecorada
                   </button>
