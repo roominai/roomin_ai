@@ -145,9 +145,72 @@ export async function POST(request: Request) {
       if (jsonFinalResponse.status === "succeeded") {
         restoredImage = jsonFinalResponse.output;
         
-        // Apenas registramos o sucesso da operação
+        // Debitar crédito imediatamente após confirmar o sucesso da operação
         if (userId) {
-          console.log(`Imagem gerada com sucesso para o usuário ${userId}`);
+          console.log(`Imagem gerada com sucesso para o usuário ${userId}. Debitando crédito...`);
+          
+          try {
+            // Usar a função importada debitCredits do creditSystem
+            const success = await debitCredits(userId, 1);
+            
+            if (!success) {
+              console.error("Falha ao debitar créditos do usuário");
+              // Tentar debitar diretamente via supabase como fallback
+              try {
+                const { data, error } = await supabase
+                  .from('profiles')
+                  .update({ credits: userCredits - 1 })
+                  .eq('id', userId);
+                  
+                if (error) {
+                  // Tentar usar a função RPC como último recurso
+                  const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
+                    user_id: userId,
+                    amount: 1
+                  });
+                  
+                  if (rpcError) {
+                    console.error("Erro ao debitar crédito via RPC:", rpcError);
+                  } else {
+                    console.log(`Crédito debitado via RPC para o usuário ${userId}`);
+                  }
+                } else {
+                  console.log(`Crédito debitado via fallback para o usuário ${userId}`);
+                }
+              } catch (fallbackError) {
+                console.error("Erro no método fallback de débito:", fallbackError);
+              }
+            } else {
+              console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
+            }
+          } catch (debitError) {
+            console.error("Erro ao debitar créditos do usuário:", debitError);
+            // Tentar debitar diretamente via supabase como fallback
+            try {
+              const { data, error } = await supabase
+                .from('profiles')
+                .update({ credits: userCredits - 1 })
+                .eq('id', userId);
+                
+              if (error) {
+                // Tentar usar a função RPC como último recurso
+                const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
+                  user_id: userId,
+                  amount: 1
+                });
+                
+                if (rpcError) {
+                  console.error("Erro ao debitar crédito via RPC:", rpcError);
+                } else {
+                  console.log(`Crédito debitado via RPC para o usuário ${userId}`);
+                }
+              } else {
+                console.log(`Crédito debitado via fallback para o usuário ${userId}`);
+              }
+            } catch (fallbackError) {
+              console.error("Erro no método fallback de débito:", fallbackError);
+            }
+          }
         }
       } else if (jsonFinalResponse.status === "failed") {
         throw new Error("Falha na geração da imagem: " + (jsonFinalResponse.error || "Erro desconhecido"));
@@ -161,76 +224,7 @@ export async function POST(request: Request) {
       throw new Error("Tempo limite excedido para geração da imagem");
     }
 
-    // Debitar crédito apenas após a geração bem-sucedida da imagem
-    if (userId) {
-      try {
-        // Usar a função importada debitCredits do creditSystem
-        const success = await debitCredits(userId, 1);
-        
-        if (!success) {
-          console.error("Falha ao debitar créditos do usuário");
-          // Mesmo com erro no débito, retornamos a imagem gerada com sucesso
-          console.log("Imagem gerada com sucesso, mas houve erro ao debitar crédito");
-           
-          // Tentar debitar diretamente via supabase como fallback
-          try {
-            const { data, error } = await supabase
-              .from('profiles')
-              .update({ credits: userCredits - 1 })
-              .eq('id', userId);
-              
-            if (error) {
-              // Tentar usar a função RPC como último recurso
-              const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
-                user_id: userId,
-                amount: 1
-              });
-              
-              if (rpcError) {
-                console.error("Erro ao debitar crédito via RPC:", rpcError);
-              } else {
-                console.log(`Crédito debitado via RPC para o usuário ${userId}`);
-              }
-            } else {
-              console.log(`Crédito debitado via fallback para o usuário ${userId}`);
-            }
-          } catch (fallbackError) {
-            console.error("Erro no método fallback de débito:", fallbackError);
-          }
-        } else {
-          console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
-        }
-      } catch (debitError) {
-        console.error("Erro ao debitar créditos do usuário:", debitError);
-        console.log("Imagem gerada com sucesso, mas houve erro ao debitar crédito");
-         
-        // Tentar debitar diretamente via supabase como fallback
-        try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .update({ credits: userCredits - 1 })
-            .eq('id', userId);
-            
-          if (error) {
-            // Tentar usar a função RPC como último recurso
-            const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
-              user_id: userId,
-              amount: 1
-            });
-            
-            if (rpcError) {
-              console.error("Erro ao debitar crédito via RPC:", rpcError);
-            } else {
-              console.log(`Crédito debitado via RPC para o usuário ${userId}`);
-            }
-          } else {
-            console.log(`Crédito debitado via fallback para o usuário ${userId}`);
-          }
-        } catch (fallbackError) {
-          console.error("Erro no método fallback de débito:", fallbackError);
-        }
-      }
-    }
+    // Os créditos já foram debitados quando a imagem foi gerada com sucesso
 
     return NextResponse.json(restoredImage);
     
