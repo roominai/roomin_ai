@@ -15,10 +15,25 @@
 
 body {
   font-family: 'Inter', sans-serif;
+  background-color: #f9fafb;
 }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Poppins', sans-serif;
+}
+
+/* Estilos para o carrossel */
+.carousel-container .slick-slide {
+  padding: 10px;
+}
+
+.carousel-container .slick-dots li button:before {
+  color: var(--primary-color);
+  font-size: 10px;
+}
+
+.carousel-container .slick-dots li.slick-active button:before {
+  color: var(--primary-hover);
 }
 
 .credits-badge {
