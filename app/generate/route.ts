@@ -149,67 +149,59 @@ export async function POST(request: Request) {
         if (userId) {
           console.log(`Imagem gerada com sucesso para o usuário ${userId}. Debitando crédito...`);
           
+          // Usar a função RPC diretamente como método principal (mais confiável)
           try {
-            // Usar a função importada debitCredits do creditSystem
-            const success = await debitCredits(userId, 1);
+            const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
+              user_id: userId,
+              amount: 1
+            });
             
-            if (!success) {
-              console.error("Falha ao debitar créditos do usuário");
-              // Tentar debitar diretamente via supabase como fallback
+            if (rpcError) {
+              console.error("Erro ao debitar crédito via RPC:", rpcError);
+              
+              // Tentar com a função debitCredits como fallback
               try {
-                const { data, error } = await supabase
-                  .from('profiles')
-                  .update({ credits: userCredits - 1 })
-                  .eq('id', userId);
+                const success = await debitCredits(userId, 1);
+                
+                if (!success) {
+                  console.error("Falha ao debitar créditos do usuário via debitCredits");
                   
-                if (error) {
-                  // Tentar usar a função RPC como último recurso
-                  const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
-                    user_id: userId,
-                    amount: 1
-                  });
-                  
-                  if (rpcError) {
-                    console.error("Erro ao debitar crédito via RPC:", rpcError);
-                  } else {
-                    console.log(`Crédito debitado via RPC para o usuário ${userId}`);
+                  // Último recurso: atualização direta
+                  try {
+                    const { data, error } = await supabase
+                      .from('profiles')
+                      .update({ credits: userCredits - 1 })
+                      .eq('id', userId);
+                      
+                    if (error) {
+                      console.error("Erro na atualização direta de créditos:", error);
+                      throw new Error("Não foi possível debitar os créditos");
+                    } else {
+                      console.log(`Crédito debitado via atualização direta para o usuário ${userId}`);
+                    }
+                  } catch (directUpdateError) {
+                    console.error("Erro na atualização direta:", directUpdateError);
+                    throw new Error("Não foi possível debitar os créditos");
                   }
                 } else {
-                  console.log(`Crédito debitado via fallback para o usuário ${userId}`);
+                  console.log(`Crédito debitado com sucesso via debitCredits para o usuário ${userId}`);
                 }
-              } catch (fallbackError) {
-                console.error("Erro no método fallback de débito:", fallbackError);
+              } catch (debitError) {
+                console.error("Erro ao debitar créditos via debitCredits:", debitError);
+                throw new Error("Não foi possível debitar os créditos");
               }
             } else {
-              console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
-            }
-          } catch (debitError) {
-            console.error("Erro ao debitar créditos do usuário:", debitError);
-            // Tentar debitar diretamente via supabase como fallback
-            try {
-              const { data, error } = await supabase
-                .from('profiles')
-                .update({ credits: userCredits - 1 })
-                .eq('id', userId);
-                
-              if (error) {
-                // Tentar usar a função RPC como último recurso
-                const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
-                  user_id: userId,
-                  amount: 1
-                });
-                
-                if (rpcError) {
-                  console.error("Erro ao debitar crédito via RPC:", rpcError);
-                } else {
-                  console.log(`Crédito debitado via RPC para o usuário ${userId}`);
-                }
+              // RPC funcionou corretamente
+              if (rpcData === true) {
+                console.log(`Crédito debitado com sucesso via RPC para o usuário ${userId}`);
               } else {
-                console.log(`Crédito debitado via fallback para o usuário ${userId}`);
+                console.error("Função RPC retornou falso, verificando créditos do usuário");
+                throw new Error("Não foi possível debitar os créditos");
               }
-            } catch (fallbackError) {
-              console.error("Erro no método fallback de débito:", fallbackError);
             }
+          } catch (error) {
+            console.error("Erro ao debitar créditos:", error);
+            throw new Error("Não foi possível debitar os créditos. Verifique seu saldo.");
           }
         }
       } else if (jsonFinalResponse.status === "failed") {
