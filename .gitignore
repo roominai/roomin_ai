@@ -36,3 +36,27 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env
+
+# Imagens da pasta public
+# Ignorar todas as imagens na pasta public, exceto as especificadas
+/public/*.png
+/public/*.jpg
+/public/*.jpeg
+/public/*.gif
+/public/*.svg
+/public/*.webp
+# Exceções - imagens que devem ser incluídas no repositório
+!/public/favicon.ico
+!/public/og-image.png
+!/public/vercel.svg
+!/public/vercelLogo.svg
+!/public/vercelLogo.png
+!/public/bed.svg
+!/public/default-avatar.svg
+!/public/number-1-blue.svg
+!/public/number-1-white.svg
+!/public/number-2-blue.svg
+!/public/number-2-white.svg
+!/public/number-3-blue.svg
+!/public/number-3-white.svg
+!/public/logoroomin1.png
