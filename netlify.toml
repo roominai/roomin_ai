@@ -1,0 +1,29 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+# Configuração para otimização de imagens
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Configuração para cache de imagens
+[[headers]]
+  for = "/public/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Configuração específica para imagens
+[[headers]]
+  for = "/public/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/public/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/public/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
