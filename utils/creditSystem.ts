@@ -82,16 +82,28 @@ export async function updateUserCredits(userId: string, newCredits: number): Pro
  */
 export async function debitCredits(userId: string, amount: number = 1): Promise<boolean> {
   try {
-    // Verificar saldo atual
-    const currentCredits = await getUserCredits(userId);
+    // Usar diretamente a função RPC do banco de dados para garantir atomicidade
+    const { data, error } = await supabase.rpc('decrement_credits', {
+      user_id: userId,
+      amount: amount
+    });
     
-    // Verificar se há créditos suficientes
-    if (currentCredits < amount) {
-      return false;
+    if (error) {
+      console.error('Erro ao debitar créditos via RPC:', error);
+      
+      // Fallback: verificar saldo atual e atualizar manualmente
+      const currentCredits = await getUserCredits(userId);
+      
+      // Verificar se há créditos suficientes
+      if (currentCredits < amount) {
+        return false;
+      }
+      
+      // Atualizar o saldo de créditos
+      return await updateUserCredits(userId, currentCredits - amount);
     }
     
-    // Atualizar o saldo de créditos
-    return await updateUserCredits(userId, currentCredits - amount);
+    return data === true;
   } catch (error) {
     console.error('Erro ao debitar créditos:', error);
     return false;
