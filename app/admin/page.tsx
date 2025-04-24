@@ -24,8 +24,14 @@ export default function AdminPage() {
 
   // Redirecionar se não for admin
   useEffect(() => {
-    if (!loading && (!user || !isAdmin)) {
-      router.push('/');
+    if (!loading) {
+      console.log('Verificação de acesso admin:', { user: !!user, isAdmin, loading });
+      if (!user || !isAdmin) {
+        console.log('Redirecionando: usuário não é admin ou não está autenticado');
+        router.push('/');
+      } else {
+        console.log('Acesso ao painel admin permitido');
+      }
     }
   }, [user, isAdmin, loading, router]);
 
