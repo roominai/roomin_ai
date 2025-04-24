@@ -102,7 +102,11 @@ export async function POST(request: Request) {
           .update({ credits: userCredits })
           .eq('id', userId);
           
-        console.log(`Crédito devolvido para o usuário ${userId} devido a falha na API.`);
+        if (error) {
+          console.error("Erro ao devolver crédito:", error);
+        } else {
+          console.log(`Crédito devolvido para o usuário ${userId} devido a falha na API.`);
+        }
       } catch (error) {
         console.error("Erro ao devolver crédito:", error);
       }
@@ -165,12 +169,64 @@ export async function POST(request: Request) {
           console.error("Falha ao debitar créditos do usuário");
           // Mesmo com erro no débito, retornamos a imagem gerada com sucesso
           console.log("Imagem gerada com sucesso, mas houve erro ao debitar crédito");
+           
+          // Tentar debitar diretamente via supabase como fallback
+          try {
+            const { data, error } = await supabase
+              .from('profiles')
+              .update({ credits: userCredits - 1 })
+              .eq('id', userId);
+              
+            if (error) {
+              // Tentar usar a função RPC como último recurso
+              const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
+                user_id: userId,
+                amount: 1
+              });
+              
+              if (rpcError) {
+                console.error("Erro ao debitar crédito via RPC:", rpcError);
+              } else {
+                console.log(`Crédito debitado via RPC para o usuário ${userId}`);
+              }
+            } else {
+              console.log(`Crédito debitado via fallback para o usuário ${userId}`);
+            }
+          } catch (fallbackError) {
+            console.error("Erro no método fallback de débito:", fallbackError);
+          }
         } else {
           console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
         }
       } catch (debitError) {
         console.error("Erro ao debitar créditos do usuário:", debitError);
         console.log("Imagem gerada com sucesso, mas houve erro ao debitar crédito");
+         
+        // Tentar debitar diretamente via supabase como fallback
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .update({ credits: userCredits - 1 })
+            .eq('id', userId);
+            
+          if (error) {
+            // Tentar usar a função RPC como último recurso
+            const { data: rpcData, error: rpcError } = await supabase.rpc('decrement_credits', {
+              user_id: userId,
+              amount: 1
+            });
+            
+            if (rpcError) {
+              console.error("Erro ao debitar crédito via RPC:", rpcError);
+            } else {
+              console.log(`Crédito debitado via RPC para o usuário ${userId}`);
+            }
+          } else {
+            console.log(`Crédito debitado via fallback para o usuário ${userId}`);
+          }
+        } catch (fallbackError) {
+          console.error("Erro no método fallback de débito:", fallbackError);
+        }
       }
     }
 
@@ -188,7 +244,22 @@ export async function POST(request: Request) {
           .update({ credits: userCredits })
           .eq('id', userId);
           
-        console.log(`Crédito devolvido para o usuário ${userId} devido a falha na geração.`);
+        if (updateError) {
+          console.error("Erro ao devolver crédito:", updateError);
+          // Tentar novamente com a função RPC do banco de dados
+          const { data: rpcData, error: rpcError } = await supabase.rpc('update_user_credits', {
+            user_id: userId,
+            new_credits: userCredits
+          });
+          
+          if (rpcError) {
+            console.error("Erro ao devolver crédito via RPC:", rpcError);
+          } else {
+            console.log(`Crédito devolvido via RPC para o usuário ${userId} devido a falha na geração.`);
+          }
+        } else {
+          console.log(`Crédito devolvido para o usuário ${userId} devido a falha na geração.`);
+        }
       } catch (updateError) {
         console.error("Erro ao devolver crédito:", updateError);
       }
