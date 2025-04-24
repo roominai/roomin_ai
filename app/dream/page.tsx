@@ -28,41 +28,6 @@ const options: UploadWidgetConfig = {
   maxFileCount: 1,
   mimeTypes: ["image/jpeg", "image/png", "image/jpg"],
   editor: { images: { crop: false } },
-  locale: {
-    // Tradução dos textos para português
-    uploadImage: "Enviar uma Imagem",
-    orDragDropImage: "...ou arraste e solte uma imagem",
-    addAnotherFile: "Adicionar Outro Arquivo",
-    addAnotherImage: "Adicionar Outra Imagem",
-    cancel: "Cancelar",
-    cancelInPreviewWindow: "Cancelar",
-    cancelled: "Cancelado!",
-    continue: "Continuar",
-    crop: "Recortar",
-    customValidationFailed: "Validação personalizada falhou",
-    done: "Concluído",
-    error: "Erro!",
-    finish: "Finalizar",
-    finishIcon: true,
-    image: "Imagem",
-    maxFilesReached: "Número máximo de arquivos:",
-    maxImagesReached: "Número máximo de imagens:",
-    maxSize: "Tamanho máximo do arquivo:",
-    next: "Próximo",
-    of: "de",
-    orDragDropFile: "...ou arraste e solte um arquivo",
-    orDragDropFiles: "...ou arraste e solte arquivos",
-    orDragDropImages: "...ou arraste e solte imagens",
-    pleaseWait: "Por favor, aguarde...",
-    processingFile: "Processando arquivo...",
-    remove: "Remover",
-    removed: "Removido!",
-    skip: "Pular",
-    unsupportedFileType: "Tipo de arquivo não suportado",
-    uploadFile: "Enviar um Arquivo",
-    uploadFiles: "Enviar Arquivos",
-    uploadImages: "Enviar Imagens"
-  },
   styles: {
     colors: {
       primary: "#2563EB", // Primary buttons & links
@@ -70,7 +35,7 @@ const options: UploadWidgetConfig = {
       shade100: "#fff", // Standard text
       shade200: "#fffe", // Secondary button text
       shade300: "#fffd", // Secondary button text (hover)
-      shade400: "#808080", // Welcome text (alterado para cinza)
+      shade400: "#fffc", // Welcome text
       shade500: "#fff9", // Modal close button
       shade600: "#fff7", // Border
       shade700: "#fff2", // Progress indicator background
@@ -120,7 +85,6 @@ export default function DreamPage() {
     }
   };
 
-  // Componente de upload de imagem
   const UploadDropZone = () => (
     <UploadDropzone
       options={options}
@@ -318,7 +282,7 @@ export default function DreamPage() {
                   restored={restoredImage!}
                 />
               )}
-              {!originalPhoto && user && <UploadDropZone />}
+              {!originalPhoto && <UploadDropZone />}
               {originalPhoto && !restoredImage && (
                 <Image
                   alt="original photo"
