@@ -57,18 +57,10 @@ export async function POST(request: Request) {
     }
     
     userCredits = data.credits;
+    // Não debitamos o crédito aqui - apenas verificamos se o usuário tem crédito suficiente
+    // O débito será feito apenas após a geração bem-sucedida da imagem
     
-    // Debitar crédito antes de iniciar a geração da imagem
-    // Usar RPC para garantir que a atualização dispare eventos em tempo real
-    const { data: updateData, error: updateError } = await supabase
-      .rpc('decrement_credits', { user_id: userId, amount: 1 });
-      
-    if (updateError || !updateData) {
-      console.error("Erro ao debitar créditos do usuário:", updateError);
-      return new Response("Erro ao debitar créditos. Por favor, tente novamente.", { status: 500 });
-    }
-    
-    console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
+    console.log(`Usuário ${userId} tem ${userCredits} créditos disponíveis. Iniciando geração de imagem...`);
   }
 
   // POST request to Replicate to start the image restoration generation process
@@ -161,6 +153,20 @@ export async function POST(request: Request) {
     
     if (!restoredImage) {
       throw new Error("Tempo limite excedido para geração da imagem");
+    }
+
+    // Debitar crédito apenas após a geração bem-sucedida da imagem
+    if (userId) {
+      const { data: updateData, error: updateError } = await supabase
+        .rpc('decrement_credits', { user_id: userId, amount: 1 });
+        
+      if (updateError || !updateData) {
+        console.error("Erro ao debitar créditos do usuário:", updateError);
+        // Mesmo com erro no débito, retornamos a imagem gerada com sucesso
+        console.log("Imagem gerada com sucesso, mas houve erro ao debitar crédito");
+      } else {
+        console.log(`Crédito debitado com sucesso para o usuário ${userId}. Créditos restantes: ${userCredits - 1}`);
+      }
     }
 
     return NextResponse.json(restoredImage);
