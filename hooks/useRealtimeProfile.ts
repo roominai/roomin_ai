@@ -42,6 +42,8 @@ export function useRealtimeProfile(user: User | null, initialData?: Partial<Prof
           .single();
 
         if (error) throw error;
+        console.log('Perfil carregado do banco:', data);
+        console.log('Status de admin do perfil:', data?.is_admin);
         setProfile(data);
       } catch (err) {
         console.error('Erro ao buscar perfil:', err);
@@ -108,7 +110,9 @@ export function useRealtimeProfile(user: User | null, initialData?: Partial<Prof
     },
     // Getter para facilitar a verificação de admin
     get isAdmin() {
-      return profile?.is_admin || false;
+      const adminStatus = profile?.is_admin || false;
+      console.log('Verificação de admin retornando:', adminStatus);
+      return adminStatus;
     }
   };
 }
