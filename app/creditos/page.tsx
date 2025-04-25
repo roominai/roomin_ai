@@ -11,8 +11,8 @@ import Image from 'next/image';
 import { addCredits } from '../../utils/creditSystem';
 import SquigglyLines from '../../components/SquigglyLines';
 
-// Importação do Stripe
-import { loadStripe } from '@stripe/stripe-js';
+// Importação do Mercado Pago
+import { initMercadoPago } from '@mercadopago/sdk-react';
 
 // Definição dos planos de créditos
 const creditPlans = [
@@ -42,8 +42,8 @@ const creditPlans = [
   }
 ];
 
-// Inicializar o Stripe
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
+// Inicializar o Mercado Pago
+initMercadoPago(process.env.NEXT_PUBLIC_MERCADO_PAGO_PUBLIC_KEY || '');
 
 export default function CreditosPage() {
   const { user, credits } = useAuth();
@@ -66,7 +66,7 @@ export default function CreditosPage() {
     }
   }, [searchParams]);
 
-  // Função para iniciar o checkout com Stripe
+  // Função para iniciar o checkout com Mercado Pago
   const handleCheckout = async (planId: string) => {
     if (!user) {
       router.push('/login');
@@ -78,7 +78,7 @@ export default function CreditosPage() {
     setMessage('');
 
     try {
-      // Fazer uma chamada para API do backend que cria uma sessão de checkout
+      // Fazer uma chamada para API do backend que cria uma preferência de pagamento
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,21 +87,14 @@ export default function CreditosPage() {
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro ao criar sessão de checkout');
+        throw new Error(errorData.error || 'Erro ao criar preferência de pagamento');
       }
       
-      // Redirecionar para a página de checkout do Stripe
-      const { sessionId } = await response.json();
-      const stripe = await stripePromise;
+      // Redirecionar para a página de checkout do Mercado Pago
+      const { preferenceId } = await response.json();
       
-      if (stripe) {
-        const { error } = await stripe.redirectToCheckout({ sessionId });
-        if (error) {
-          throw new Error(error.message || 'Erro ao redirecionar para o checkout');
-        }
-      } else {
-        throw new Error('Não foi possível carregar o Stripe');
-      }
+      // Redirecionar para o checkout do Mercado Pago
+      window.location.href = `https://www.mercadopago.com.br/checkout/v1/redirect?preference-id=${preferenceId}`;
     } catch (error) {
       console.error('Erro ao processar pagamento:', error);
       setMessage('Ocorreu um erro ao processar o pagamento. Por favor, tente novamente.');
