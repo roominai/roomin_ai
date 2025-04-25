@@ -1,50 +1,43 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import Stripe from 'stripe';
+import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { addCredits } from '../../../utils/creditSystem';
 
-// Inicializar o Stripe
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-03-31.basil',
-});
+// Inicializar o Mercado Pago
+const mercadopago = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '' });
 
 // Webhook secret para verificar assinatura
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
+const webhookSecret = process.env.MERCADO_PAGO_WEBHOOK_SECRET || '';
+const payment = new Payment(mercadopago);
 
 export async function POST(request: Request) {
   try {
-    const body = await request.text();
-    const headersList = headers();
-    const signature = headersList.get('stripe-signature') || '';
-
-    let event;
-
-    // Verificar a assinatura do webhook
-    try {
-      event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
-    } catch (err) {
-      console.error('Erro na assinatura do webhook:', err);
-      return NextResponse.json({ error: 'Assinatura inválida' }, { status: 400 });
-    }
-
-    // Processar o evento
-    if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as Stripe.Checkout.Session;
+    const body = await request.json();
+    
+    // Verificar se é uma notificação de pagamento do Mercado Pago
+    if (body.action === 'payment.created' || body.action === 'payment.updated') {
+      const paymentId = body.data.id;
       
-      // Extrair metadados da sessão
-      const userId = session.metadata?.userId;
-      const credits = parseInt(session.metadata?.credits || '0');
-
-      if (userId && credits > 0) {
-        // Adicionar créditos à conta do usuário
-        const success = await addCredits(userId, credits);
+      // Obter detalhes do pagamento
+      const paymentData = await payment.get({ id: paymentId });
+      
+      // Verificar se o pagamento foi aprovado
+      if (paymentData.status === 'approved') {
+        // Extrair metadados do pagamento
+        const userId = paymentData.metadata?.userId;
+        const credits = parseInt(paymentData.metadata?.credits || '0');
         
-        if (!success) {
-          console.error('Falha ao adicionar créditos após pagamento:', { userId, credits });
-          // Mesmo em caso de falha, retornamos 200 para o Stripe não reenviar o webhook
-          // Mas registramos o erro para investigação posterior
-        } else {
-          console.log('Créditos adicionados com sucesso:', { userId, credits });
+        if (userId && credits > 0) {
+          // Adicionar créditos à conta do usuário
+          const success = await addCredits(userId, credits);
+          
+          if (!success) {
+            console.error('Falha ao adicionar créditos após pagamento:', { userId, credits });
+            // Mesmo em caso de falha, retornamos 200 para o Mercado Pago não reenviar o webhook
+            // Mas registramos o erro para investigação posterior
+          } else {
+            console.log('Créditos adicionados com sucesso:', { userId, credits });
+          }
         }
       }
     }
