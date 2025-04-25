@@ -29,7 +29,7 @@ export default function Header() {
 
   return (
     <header className="flex flex-col xs:flex-row justify-between items-center w-full mt-6 border-b pb-7 sm:px-4 px-2 border-gray-200 gap-2">
-      <Link href="/" className="flex items-center space-x-2">
+      <Link href="/" className="flex items-center">
         <Image
           alt="logo roomin"
           src="/logoroomin1.png"
@@ -38,7 +38,6 @@ export default function Header() {
           height={60}
           style={{ objectFit: "contain" }}
         />
-        <span className="font-bold text-xl tracking-tight bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">roomin.ai</span>
       </Link>
       <div>
         {user ? (
