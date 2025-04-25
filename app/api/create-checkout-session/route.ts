@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '../../../supabaseClient';
-import Stripe from 'stripe';
+import { MercadoPagoConfig, Preference } from 'mercadopago';
 import { addCredits } from '../../../utils/creditSystem';
 
 // Definição dos planos de créditos (deve corresponder aos da página de créditos)
@@ -28,10 +28,9 @@ const creditPlans = [
   }
 ];
 
-// Inicializar o Stripe (a chave deve ser adicionada ao arquivo .env)
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-03-31.basil', // Usar a versão mais recente da API
-});
+// Inicializar o Mercado Pago (a chave deve ser adicionada ao arquivo .env)
+const mercadopago = new MercadoPagoConfig({ accessToken: process.env.MERCADO_PAGO_ACCESS_TOKEN || '' });
+const preference = new Preference(mercadopago);
 
 export async function POST(request: Request) {
   try {
@@ -55,33 +54,35 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 400 });
     }
 
-    // Criar uma sessão de checkout do Stripe
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price_data: {
-            currency: 'brl',
-            product_data: {
-              name: plan.name,
-              description: `${plan.credits} créditos - ${plan.description}`,
-            },
-            unit_amount: plan.price,
+    // Criar uma preferência de pagamento do Mercado Pago
+    const preferenceData = await preference.create({
+      body: {
+        items: [
+          {
+            id: plan.id,
+            title: plan.name,
+            description: `${plan.credits} créditos - ${plan.description}`,
+            quantity: 1,
+            currency_id: 'BRL',
+            unit_price: plan.price / 100, // Convertendo de centavos para reais
           },
-          quantity: 1,
+        ],
+        back_urls: {
+          success: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/creditos?success=true`,
+          failure: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/creditos?canceled=true`,
+          pending: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/creditos?pending=true`
         },
-      ],
-      mode: 'payment',
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/creditos?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/creditos?canceled=true`,
-      metadata: {
-        userId: userId,
-        planId: planId,
-        credits: plan.credits.toString(),
-      },
+        auto_return: 'approved',
+        notification_url: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/webhook`,
+        metadata: {
+          userId: userId,
+          planId: planId,
+          credits: plan.credits.toString(),
+        },
+    },
     });
 
-    return NextResponse.json({ sessionId: session.id });
+    return NextResponse.json({ preferenceId: preferenceData.id });
   } catch (error) {
     console.error('Erro ao criar sessão de checkout:', error);
     return NextResponse.json(
