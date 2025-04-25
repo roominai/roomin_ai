@@ -19,6 +19,7 @@
     "@upstash/redis": "^1.19.1",
     "@vercel/analytics": "^0.1.11",
     "bcrypt": "^5.1.1",
+    "encoding": "^0.1.13",
     "framer-motion": "^8.2.4",
     "mercadopago": "^2.4.0",
     "mongodb": "^6.16.0",
