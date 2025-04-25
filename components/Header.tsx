@@ -153,7 +153,7 @@ export default function Header() {
           </div>
         ) : (
           <Link
-            className="flex max-w-fit items-center justify-center space-x-2 rounded-full border border-blue-600 text-white px-5 py-2 text-sm shadow-md hover:bg-blue-500 bg-blue-600 font-medium transition"
+            className="flex max-w-fit items-center justify-center space-x-2 rounded-xl border-0 text-white px-6 py-2.5 text-sm shadow-lg hover:shadow-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 font-poppins font-semibold transition-all duration-300"
             href="/login"
           >
             <svg
