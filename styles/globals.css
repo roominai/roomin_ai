@@ -59,6 +59,58 @@ h1, h2, h3, h4, h5, h6 {
   height: 1.25rem;
 }
 
+/* Estilos para a tarja POPULAR */
+.popular-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+  color: white;
+  font-weight: bold;
+  font-size: 0.75rem;
+  padding: 0.25rem 1.5rem;
+  transform: translateX(30%) translateY(-10%) rotate(45deg);
+  transform-origin: bottom left;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  overflow: visible;
+}
+
+/* Estilo para o contorno laranja do card Premium */
+.premium-border {
+  border: 2px solid #f97316 !important;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.3) !important;
+}
+
+/* Estilo para o ícone de alta demanda */
+.trending-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  color: white;
+  font-weight: bold;
+  font-size: 0.75rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Estilos para os valores dos planos */
+.price-value {
+  font-weight: 700;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
 @media (min-width: 400px) {
   .background-gradient::before {
     background: radial-gradient(
