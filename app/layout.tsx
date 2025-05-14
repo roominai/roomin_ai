@@ -1,7 +1,7 @@
 import { Analytics } from "@vercel/analytics/react";
 import { Metadata } from "next";
 import "../styles/globals.css";
-import { AuthProvider } from "../components/AuthProvider";
+import { AuthProvider } from "@/components/AuthProvider";
 import BlurredBackground from "../components/BlurredBackground";
 
 let title = "Roomin AI";

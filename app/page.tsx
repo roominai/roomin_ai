@@ -1,190 +1,145 @@
-"use client";
+// app/page.tsx
+import React from 'react';
+import Image from 'next/image';
+import './style.css';
+import './index.css';
 
-import Image from "next/image";
-import Link from "next/link";
-import Footer from "../components/Footer";
-// import Header from "../components/Header"; // Mantendo o header como um componente separado é uma boa prática.
-// import SquigglyLines from "../components/SquigglyLines"; // Pode ser usado se quisermos um efeito específico.
-// import TypewriterEffect from "../components/TypewriterEffect"; // Pode ser usado para um efeito de texto.
-// import ImageCarousel from "../components/ImageCarousel"; // Pode ser usado para mostrar exemplos.
-import { motion } from "framer-motion"; // Para animações sutis.
-// import "../styles/nubank-inspired.css"; // Vamos refatorar o CSS global em vez de usar um tema específico aqui.
-
-// Importe componentes e estilos conforme necessário para o novo layout.
-// Ex: import HeroSection from "../components/HeroSection";
-// Ex: import FeaturesSection from "../components/FeaturesSection";
-// Ex: import CTABanner from "../components/CTABanner";
-
-export default function HomePage() {
-  // Define as variantes de animação para framer-motion
-  const fadeIn = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.6 } },
-  };
-
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 },
-    },
-  };
-
+const HomePage: React.FC = () => {
   return (
-    // Usando uma estrutura flex para garantir que o footer fique no final
-    <div className="flex flex-col min-h-screen">
-      {/* Pode incluir um Header aqui se mantido como componente */}
-      {/* <Header /> */}
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <header className="bg-white shadow-md">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="text-2xl font-bold text-gray-800">
+            {/* Logo Placeholder */}
+            Redecora
+          </div>
+          <nav className="space-x-4">
+            <a href="#" className="text-gray-600 hover:text-gray-800">Home</a>
+            <a href="#" className="text-gray-600 hover:text-gray-800">Serviços</a>
+            <a href="#" className="text-gray-600 hover:text-gray-800">Portfólio</a>
+            <a href="#" className="text-gray-600 hover:text-gray-800">Contato</a>
+          </nav>
+        </div>
+      </header>
 
-      {/* Hero Section */}
-      <main className="flex-grow container mx-auto px-4 py-16 md:py-24">
-        <motion.section
-          className="text-center mb-16 md:mb-24"
-          initial="hidden"
-          animate="visible"
-          variants={fadeIn}
-        >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 text-gray-900">
-            Transforme seus espaços com <br />
-            <span className="text-blue-600">Inteligência Artificial</span>
+      {/* Hero Banner */}
+      <section
+        className="relative h-96 bg-cover bg-center"
+        style={{ backgroundImage: 'url(/placeholder-hero.jpg)' }} // Placeholder image
+      >
+        <div className="absolute inset-0 bg-black opacity-50"></div>
+        <div className="container mx-auto px-6 h-full flex items-center justify-center relative z-10">
+          <h1 className="text-4xl md:text-5xl font-bold text-white text-center">
+            Transforme seu espaço com estilo
           </h1>
-          <p className="max-w-2xl mx-auto text-lg text-gray-600 mb-10">
-            Visualize o potencial da sua casa ou escritório com um clique. Nossa IA cria designs de interiores incríveis para qualquer ambiente.
-          </p>
-          {/* Call to Action Buttons */}
-          <div className="flex justify-center gap-4">
-            {/* Link para a página de geração (Dream) */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link
-                href="/dream"
-                className="bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-md hover:bg-blue-700 transition duration-300"
-              >
-                Experimentar Agora
-              </Link>
-            </motion.div>
-            {/* Link para a página de Créditos */}
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              className="text-center mb-16"
- <Link
-                href="/creditos" // Link para a página de Créditos
-                className="text-blue-600 bg-white border border-blue-600 font-semibold px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition duration-300"
-              >
-                Ver Planos de Crédito
-              </Link>
-            </motion.div>
-          </div>
-        </motion.section>
+        </div>
+      </section>
 
-        {/* How It Works Section (Simplified) */}
-        <motion.section
-          className="py-16 md:py-24 bg-gray-50"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
-          variants={staggerContainer}
-        >
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Como Funciona</h2>
-            <p className="text-lg text-gray-600 max-w-xl mx-auto">É simples e rápido transformar seu ambiente em 3 passos.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {/* Step 1 */}
-            <motion.div className="text-center p-6 rounded-lg bg-white shadow-sm" variants={fadeIn}>
-              <div className="w-12 h-12 mx-auto mb-4 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl">
-                1
+      {/* Services Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">Nossos Serviços</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Service Card 1 */}
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="text-4xl text-blue-600 mb-4">
+                {/* Icon Placeholder */}
+                🛋️
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">Envie sua Foto</h3>
-              <p className="text-gray-600">Faça upload de uma imagem do ambiente que deseja transformar.</p>
-            </motion.div>
-            {/* Step 2 */}
-            <motion.div className="text-center p-6 rounded-lg bg-white shadow-sm" variants={fadeIn}>
-              <div className="w-12 h-12 mx-auto mb-4 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl">
-                2
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Design de Interiores</h3>
+              <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
+            {/* Service Card 2 */}
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="text-4xl text-green-600 mb-4">
+                {/* Icon Placeholder */}
+                💡
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">Escolha um Estilo</h3>
-              <p className="text-gray-600">Selecione o estilo de decoração que mais lhe agrada.</p>
-            </motion.div>
-            {/* Step 3 */}
-            <motion.div className="text-center p-6 rounded-lg bg-white shadow-sm" variants={fadeIn}>
-              <div className="w-12 h-12 mx-auto mb-4 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold text-xl">
-                3
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Consultoria Online</h3>
+              <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
+            {/* Service Card 3 */}
+            <div className="bg-white p-6 rounded-lg shadow-md text-center">
+              <div className="text-4xl text-purple-600 mb-4">
+                {/* Icon Placeholder */}
+                🎨
               </div>
-              <h3 className="text-xl font-semibold text-gray-800 mb-3">Veja a Mágica Acontecer</h3>
-              <p className="text-gray-600">Receba o novo design do seu ambiente em segundos!</p>
-            </motion.div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">Decoração Personalizada</h3>
+              <p className="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+            </div>
           </div>
-        </motion.section>
+        </div>
+      </section>
 
-        {/* Example Images Section (Optional - using simple Images for now) */}
-        <motion.section
-          className="py-16 md:py-24"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.3 }}
-          variants={staggerContainer}
-        >
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Inspire-se</h2>
-            <p className="text-lg text-gray-600 max-w-xl mx-auto">Veja alguns exemplos de transformações criadas pela nossa IA.</p>
+      {/* Portfolio Section */}
+      <section className="py-16 bg-gray-200">
+        <div className="container mx-auto px-6">
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">Nosso Portfólio</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+            {/* Portfolio Item 1 */}
+            <div className="relative group overflow-hidden rounded-lg shadow-md">
+              <Image
+                src="/placeholder-portfolio-1.jpg" // Placeholder image
+                alt="Projeto de Interiores 1"
+                width={500}
+                height={300}
+                className="w-full h-48 object-cover transition duration-300 transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black opacity-50 group-hover:opacity-70 transition duration-300 flex items-center justify-center">
+                <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition duration-300">Projeto 1</span>
+              </div>
+            </div>
+            {/* Portfolio Item 2 */}
+            <div className="relative group overflow-hidden rounded-lg shadow-md">
+              <Image
+                src="/placeholder-portfolio-2.jpg" // Placeholder image
+                alt="Projeto de Interiores 2"
+                width={500}
+                height={300}
+                className="w-full h-48 object-cover transition duration-300 transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black opacity-50 group-hover:opacity-70 transition duration-300 flex items-center justify-center">
+                <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition duration-300">Projeto 2</span>
+              </div>
+            </div>
+            {/* Portfolio Item 3 */}
+            <div className="relative group overflow-hidden rounded-lg shadow-md">
+              <Image
+                src="/placeholder-portfolio-3.jpg" // Placeholder image
+                alt="Projeto de Interiores 3"
+                width={500}
+                height={300}
+                className="w-full h-48 object-cover transition duration-300 transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-black opacity-50 group-hover:opacity-70 transition duration-300 flex items-center justify-center">
+                <span className="text-white text-lg font-semibold opacity-0 group-hover:opacity-100 transition duration-300">Projeto 3</span>
+              </div>
+            </div>
+            {/* Add more portfolio items as needed */}
           </div>
-          {/* Simple grid of images - could replace with Carousel component */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <motion.div className="rounded-lg overflow-hidden shadow-md" variants={fadeIn}>
-              <Image
-                src="/generated-pic-2.jpg" // Substitua por imagens de exemplo reais
-                alt="Exemplo de ambiente transformado"
-                width={600}
-                height={400}
-                objectFit="cover"
-                className="w-full h-auto" // Make image responsive
-              />
-            </motion.div>
-            <motion.div className="rounded-lg overflow-hidden shadow-md" variants={fadeIn}>
-              <Image
-                src="/generated-pic.png" // Substitua por imagens de exemplo reais
-                alt="Exemplo de ambiente transformado"
-                width={600}
-                height={400}
-                objectFit="cover"
-                className="w-full h-auto" // Make image responsive
-              />
-            </motion.div>
-            <motion.div className="rounded-lg overflow-hidden shadow-md" variants={fadeIn}>
-              <Image
-                src="/original-pic.jpg" // Substitua por imagens de exemplo reais
-                alt="Exemplo de ambiente original"
-                width={600}
-                height={400}
-                objectFit="cover"
-                className="w-full h-auto" // Make image responsive
-              />
-            </motion.div>
-            {/* Adicione mais exemplos conforme necessário */}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-8">
+        <div className="container mx-auto px-6 text-center">
+          <div className="mb-4">
+            <p>Informações de Contato Placeholder</p>
+            <p>Email: info@redecora.com</p>
+            <p>Telefone: (XX) XXXX-XXXX</p>
           </div>
-        </motion.section>
-
-        {/* Final Call to Action Section */}
-        <motion.section
-          className="py-16 md:py-24 text-center bg-blue-600 text-white"
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.5 }}
-          variants={fadeIn}
-        >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Comece a Transformar Seu Espaço Hoje!</h2>
-          <p className="text-lg mb-8 max-w-2xl mx-auto">É rápido, fácil e o futuro do design de interiores.</p>
-          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-            <Link
-              href="/dream"
-              className="bg-white text-blue-600 font-semibold px-8 py-4 rounded-lg shadow-md hover:bg-gray-100 transition duration-300"
-            >
-              Criar Meu Design Agora
-            </Link>
-          </motion.div>
-        </motion.section>
-      </main>
-
-      <Footer /> {/* Incluindo o Footer aqui */}
+          <div className="space-x-4">
+            {/* Social Media Links Placeholder */}
+            <a href="#" className="text-gray-400 hover:text-white">Facebook</a>
+            <a href="#" className="text-gray-400 hover:text-white">Instagram</a>
+            <a href="#" className="text-gray-400 hover:text-white">LinkedIn</a>
+          </div>
+          <div className="mt-8 text-gray-400">
+            &copy; 2023 Redecora. Todos os direitos reservados.
+          </div>
+        </div>
+      </footer>
     </div>
   );
-}
+};

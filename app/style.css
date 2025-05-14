@@ -1,0 +1,66 @@
+/* Base Styles */
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: #333;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: #222;
+    margin-bottom: 0.5em;
+}
+
+p {
+    margin-bottom: 1em;
+}
+
+/* Navigation Bar */
+nav {
+    background-color: #f4f4f4;
+    padding: 1em;
+    text-align: center;
+}
+
+nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+nav li {
+    display: inline-block;
+    margin-right: 1em;
+}
+
+nav a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+}
+
+/* Responsive Styles */
+
+/* Mobile (default styles) */
+
+
+/* Desktop styles */
+@media (min-width: 768px) {
+    body {
+        padding: 1em 2em;
+    }
+
+    nav {
+        text-align: left;
+    }
+
+    nav ul {
+        display: flex;
+        justify-content: flex-start;
+    }
+
+    nav li {
+        margin-right: 2em;
+    }
+}
